@@ -1,6 +1,7 @@
 package com.spring.board.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -33,6 +34,22 @@ public class BoardService implements InterBoardService {
 		List<TestVO> testvoList = dao.test_select();
 		
 		return testvoList;
+	}
+
+
+	@Override
+	public int test_insert(Map<String, String> paraMap) {
+
+		int n = dao.test_insert(paraMap);
+		
+		return n;
+	}
+
+
+	@Override
+	public int test_insert(TestVO vo) {
+		int n = dao.test_insert(vo);
+		return 0;
 	}
 
 }

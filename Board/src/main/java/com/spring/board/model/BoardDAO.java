@@ -1,5 +1,8 @@
 package com.spring.board.model;
 
+import java.util.List;
+import java.util.Map;
+
 import javax.annotation.Resource;
 
 import org.mybatis.spring.SqlSessionTemplate;
@@ -50,6 +53,28 @@ public class BoardDAO implements InterBoardDAO {
 		int n_2 = sqlsession_2.insert("board.test_insert");
 		
 		return n*n_2;
+	}
+
+	// spring_test 테이블에 select 하기
+	@Override
+	public List<TestVO> test_select() {		
+		List<TestVO> testvoList = sqlsession.selectList("board.test_select");		
+		return testvoList;
+	}
+
+
+	// view단의 form 태그에서 입력받은 값을 spring_test 테이블에 isnert 하기
+	@Override
+	public int test_insert(Map<String, String> paraMap) {
+		int n = sqlsession.insert("board.test_insert_map", paraMap);		
+		return n;
+	}
+
+	// view단의 form 태그에서 입력받은 값을 spring_test 테이블에 isnert 하기
+	@Override
+	public int test_insert(TestVO vo) {		
+		int n = sqlsession.insert("board.test_insert_vo", vo);		
+		return n;		
 	}
 		
 }

@@ -4,10 +4,13 @@ import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.json.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 import com.spring.board.model.*;
 import com.spring.board.service.*;
@@ -107,9 +110,183 @@ public class BoardController {
 		
 		List<TestVO> testvoList = service.test_select();
 		
+		request.setAttribute("testvoList", testvoList);
+		
 		return "test/test_select";
+		
+		// /WEB-INF/views/test/test_select.jsp
+	}
+	
+	
+//	@RequestMapping(value="/test/test_form.action", method = {RequestMethod.GET}) // 오로지 GET방식만 허락하는 것임.
+//	@RequestMapping(value="/test/test_form.action", method = {RequestMethod.POST}) // 오로지 POST방식만 허락하는 것임.
+	@RequestMapping(value="/test/test_form.action") // GET방식 및 POST방식 둘 모두 허락하는 것임.
+	public String test_form(HttpServletRequest request) {
+		
+		String method = request.getMethod();
+		
+		if("GET".equalsIgnoreCase(method)) { // GET 방식이라면 
+			return "test/test_form"; // view 단 페이지를 띄워라
+			// /WEB-INF/views/test/test_form.jsp
+		}
+		else { // POST 방식이라면
+			String no = request.getParameter("no");
+			String name = request.getParameter("name");
+			
+			Map<String, String> paraMap = new HashMap<>();
+			paraMap.put("no", no);
+			paraMap.put("name", name);
+			
+			int n = service.test_insert(paraMap);
+			
+			if(n==1) {
+
+				return "redirect:/test/test_select.action";	
+			//	/test/test_select.action 페이지로 redirect(페이지이동)해라는 말이다.
+				
+			}
+			else {				
+				return "redirect:/test/test_form.action";
+			//	/test/test_form.action 페이지로 redirect(페이지이동)해라는 말이다.				
+			}
+			
+		}		
 		
 	}
 	
+	/////////////////////////////////////////////////////////////////////////////////
+	
+	@RequestMapping(value="/test/test_form_vo.action") // GET방식 및 POST방식 둘 모두 허락하는 것임.
+	public String test_form_vo(HttpServletRequest request, TestVO vo) {
+		
+		String method = request.getMethod();
+		
+		if("GET".equalsIgnoreCase(method)) { // GET 방식이라면 
+			return "test/test_form_vo"; // view 단 페이지를 띄워라
+			// /WEB-INF/views/test/test_form_vo.jsp
+		}
+		else { // POST 방식이라면
+
+			int n = service.test_insert(vo);
+			
+			if(n==1) {
+				return "redirect:/test/test_select.action";	
+			//	/test/test_select.action 페이지로 redirect(페이지이동)해라는 말이다.
+				
+			}
+			else {				
+				return "redirect:/test/test_form.action";
+			//	/test/test_form.action 페이지로 redirect(페이지이동)해라는 말이다.				
+			}
+			
+		}		
+		
+	}
+	
+	/////////////////////////////////////////////////////////////////////////////////
+	
+	
+	
+	@RequestMapping(value="/test/test_form_2.action", method = {RequestMethod.GET}) // 오로지 GET방식만 허락하는 것임.
+	public String test_form_2() {
+				
+		return "test/test_form_2"; // view 단 페이지를 띄워라
+	//	/WEB-INF/views/test/test_form_2.jsp 페이지를 만들어야 한다.
+	
+	}		
+		
+	
+	@RequestMapping(value="/test/test_form_2.action", method = {RequestMethod.POST}) // 오로지 POST방식만 허락하는 것임.
+	public String test_form_2(HttpServletRequest request) {
+		
+		String no = request.getParameter("no");
+		String name = request.getParameter("name");
+		
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("no", no);
+		paraMap.put("name", name);
+		
+		int n = service.test_insert(paraMap);
+		
+		if(n==1) {
+
+			return "redirect:/test/test_select.action";	
+		//	/test/test_select.action 페이지로 redirect(페이지이동)해라는 말이다.
+			
+		}
+		else {				
+			return "redirect:/test/test_form.action";
+		//	/test/test_form.action 페이지로 redirect(페이지이동)해라는 말이다.				
+		}
+	}
+		
+		// === AJAX 연습시작 === //
+		@RequestMapping(value="/test/test_form_3.action", method = {RequestMethod.GET}) // 오로지 GET방식만 허락하는 것임.
+		public String test_form_3() {
+					
+			return "test/test_form_3"; // view 단 페이지를 띄워라
+		//	/WEB-INF/views/test/test_form_3.jsp 페이지를 만들어야 한다.
+		
+		}		
+	/*
+		@ResponseBody 란?
+		메소드에 @ResponseBody Annotation이 되어 있으면 return 되는 값은 View 단 페이지를 통해서 출력되는 것이 아니라 
+		return 되어지는 값 그 자체를 웹브라우저에 바로 직접 쓰여지게 하는 것이다. 
+		일반적으로 JSON 값을 Return 할때 많이 사용된다. 
+	 */
+		@ResponseBody
+		@RequestMapping(value="/test/ajax_insert.action", method = {RequestMethod.POST}) // 오로지 POST방식만 허락하는 것임.
+		public String ajax_insert(HttpServletRequest request) {
+			
+			String no = request.getParameter("no");
+			String name = request.getParameter("name");
+			
+			Map<String, String> paraMap = new HashMap<>();
+			paraMap.put("no", no);
+			paraMap.put("name", name);
+			
+			int n = service.test_insert(paraMap);
+			
+			JSONObject jsonObj = new JSONObject(); // {} 
+			jsonObj.put("n", n); // {"n":1}
+			
+			return jsonObj.toString(); // "{"n":1}"	// view단을 나타내는 접두어, 접미어가 있는게 아님 -> @ResponseBody 필요하다.
+			
+		}
+		
+	/*
+		@ResponseBody 란?
+		메소드에 @ResponseBody Annotation이 되어 있으면 return 되는 값은 View 단 페이지를 통해서 출력되는 것이 아니라 
+		return 되어지는 값 그 자체를 웹브라우저에 바로 직접 쓰여지게 하는 것이다. 일반적으로 JSON 값을 Return 할때 많이 사용된다.  
+	   
+		>>> 스프링에서 json 또는 gson을 사용한 ajax 구현시 데이터를 화면에 출력해 줄때 한글로 된 데이터가 '?'로 출력되어 한글이 깨지는 현상이 있다. 
+			이것을 해결하는 방법은 @RequestMapping 어노테이션의 속성 중 produces="text/plain;charset=UTF-8" 를 사용하면 
+			응답 페이지에 대한 UTF-8 인코딩이 가능하여 한글 깨짐을 방지 할 수 있다. <<< 
+	*/
+		
+		@ResponseBody
+		@RequestMapping(value="/test/ajax_select.action", method = {RequestMethod.GET}, produces="text/plain;charset=UTF-8") // 오로지 GET방식만 허락하는 것임.
+		public String ajax_select() {
+			
+			List<TestVO> testvoList = service.test_select();
+			
+			JSONArray jsonArr = new JSONArray(); // [] @ResponseBody 사용시 []에 다 담겨짐
+			
+			if(testvoList != null) {
+				for(TestVO vo : testvoList) {
+					JSONObject jsonObj = new JSONObject(); 		// {}			 {}
+					jsonObj.put("no", vo.getNo());		   		// {"no":"101"}	 {"no":"102"}
+					jsonObj.put("name", vo.getName());	   		// {"no":"101","name":"이순신"}  {"no":"102","name":"엄정화"}
+					jsonObj.put("writeday", vo.getWriteday());	// {"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}  ,{"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}
+					
+					jsonArr.put(jsonObj);						// [{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}, {"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}]
+				}// end of for----------------------------------
+			}
+			
+			return jsonArr.toString(); // "[{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}, {"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}]"
+			
+ 		}
+		
+		
 	// ======== ***** spring 기초 끝 ***** ======== //
 }
