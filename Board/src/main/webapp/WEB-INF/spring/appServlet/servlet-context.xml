@@ -132,6 +132,12 @@
 		"multipartResolver" 가 아닌 다른 이름(아이디)으로 지정할경우 MultipartResolver로 사용되지 않는다.
     -->
 	
+	<!-- === #44. 양방향 암호화 알고리즘인 AES256 를 사용하여 복호화 하기 위한 클래스(파라미터가 있는 생성자) 의존객체 bean 생성하기 === --> 
+	<beans:bean id="aes" class="com.spring.board.common.AES256">
+	   <beans:constructor-arg>
+	      <beans:value>abcd0070#cclass$</beans:value> <!-- abcd0070#cclass$ 은 각자 com.spring.board.common.SecretMyKey 에 사용되던 암호화/복호화 키 이다. -->   
+	   </beans:constructor-arg>
+	</beans:bean>
 	
 	<!-- ==== #18. bean으로 등록될 @Component 클래스가 위치하는 패키지명 지정하기 ====  -->
 	<!--  
@@ -154,9 +160,9 @@
 		굳이 @Component 를 또 다시 기술할 필요가 없다.
 		@Controller , @Service , @Repository 기능이 없는 일반 클래스를 bean 으로 등록하여 사용하고자 할때  
 		그 클래스는 패키지를 base-package 로 하고 클래스명 위에 @Component 애노테이션을 붙이기만 하면 된다.  
-	         
+		        
 		bean 으로 등록되어진 클래스만이 스프링컨테이너가 자동적으로 관리를 해줄 수 있게 된다.
-	     
+		    
 		name-generator="com.spring.board.common.FullBeanNameGenerator" 은  
 		spring annotation-driven 시 bean name 중복(충돌,conflicts)을 해결하기 위해서 사용하는 커스트마이징된 BeanNameGenerator 이다. 
 	-->

@@ -39,4 +39,40 @@
 		values(#{no},#{name} , default)
 	</insert>
 	
+	
+	<!-- ====================================================================================== -->
+	
+	<!-- // === #39. 시작페이지에서 메인 이미지를 보여주는 것 === // -->
+	<select id="getImgfilenameList" resultType="String">
+		select imgfilename
+		from tbl_main_image
+		order by imgno desc
+	</select>
+	
+	<!-- === #47. 로그인 처리하기 === -->
+	<select id="getLoginMember" resultType="com.spring.board.model.MemberVO" parameterType="HashMap">
+		SELECT userid, name, email, mobile, postcode, address, detailaddress, extraaddress, gender  
+		     , birthyyyy, birthmm, birthdd, coin, point, registerday, pwdchangegap  
+		     , nvl(lastlogingap, trunc( months_between(sysdate, registerday) ) ) AS lastlogingap 
+		FROM 
+		 ( 
+		  select userid, name, email, mobile, postcode, address, detailaddress, extraaddress, gender
+		        , substr(birthday,1,4) AS birthyyyy, substr(birthday,6,2) AS birthmm, substr(birthday,9) AS birthdd
+		        , coin, point, to_char(registerday, 'yyyy-mm-dd') AS registerday
+		        , trunc( months_between(sysdate, lastpwdchangedate) ) AS pwdchangegap
+		  from tbl_member
+		  where status = 1 and userid = #{userid} and pwd = #{pwd}
+		 ) M 
+		CROSS JOIN 
+		(
+		 select trunc( months_between(sysdate, max(logindate)) ) AS lastlogingap
+		 from tbl_loginhistory
+		 where fk_userid = #{userid}
+		) H
+	</select>
+	<update id="updateIdle" parameterType="String">
+		update tbl_member set idle = 1
+		where userid = #{userid} <!-- dao의 userid -->
+	</update>
+	
 </mapper>

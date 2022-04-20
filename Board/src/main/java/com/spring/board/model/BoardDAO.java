@@ -76,5 +76,27 @@ public class BoardDAO implements InterBoardDAO {
 		int n = sqlsession.insert("board.test_insert_vo", vo);		
 		return n;		
 	}
+	
+	////////////////////////////////////////////////////////////////////////////////////////////
+	
+	// === #38. 시작페이지에서 메인 이미지를 보여주는 것 === //
+	@Override
+	public List<String> getImgfilenameList() {
+		List<String> ImgfilenameList = sqlsession.selectList("board.getImgfilenameList");
+		return ImgfilenameList;
+	}
+
+	// === #46. 로그인 처리하기 === //
+	@Override
+	public MemberVO getLoginMember(Map<String, String> paraMap) {
+		MemberVO loginuser = sqlsession.selectOne("board.getLoginMember", paraMap);
+		return loginuser;
+	}
+	// tbl_member 테이블의 idle 컬럼의 값을 1로 변경하기 //
+	@Override
+	public int updateIdle(String userid) {
+		int n = sqlsession.update("board.updateIdle", userid);
+		return n;
+	}
 		
 }
