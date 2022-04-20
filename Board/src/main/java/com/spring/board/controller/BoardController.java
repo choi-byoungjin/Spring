@@ -11,6 +11,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.servlet.ModelAndView;
 
 import com.spring.board.model.*;
 import com.spring.board.service.*;
@@ -234,59 +235,158 @@ public class BoardController {
 		return 되어지는 값 그 자체를 웹브라우저에 바로 직접 쓰여지게 하는 것이다. 
 		일반적으로 JSON 값을 Return 할때 많이 사용된다. 
 	 */
-		@ResponseBody
-		@RequestMapping(value="/test/ajax_insert.action", method = {RequestMethod.POST}) // 오로지 POST방식만 허락하는 것임.
-		public String ajax_insert(HttpServletRequest request) {
-			
-			String no = request.getParameter("no");
-			String name = request.getParameter("name");
-			
-			Map<String, String> paraMap = new HashMap<>();
-			paraMap.put("no", no);
-			paraMap.put("name", name);
-			
-			int n = service.test_insert(paraMap);
-			
-			JSONObject jsonObj = new JSONObject(); // {} 
-			jsonObj.put("n", n); // {"n":1}
-			
-			return jsonObj.toString(); // "{"n":1}"	// view단을 나타내는 접두어, 접미어가 있는게 아님 -> @ResponseBody 필요하다.
-			
+	@ResponseBody
+	@RequestMapping(value="/test/ajax_insert.action", method = {RequestMethod.POST}) // 오로지 POST방식만 허락하는 것임.
+	public String ajax_insert(HttpServletRequest request) {
+		
+		String no = request.getParameter("no");
+		String name = request.getParameter("name");
+		
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("no", no);
+		paraMap.put("name", name);
+		
+		int n = service.test_insert(paraMap);
+		
+		JSONObject jsonObj = new JSONObject(); // {} 
+		jsonObj.put("n", n); // {"n":1}
+		
+		return jsonObj.toString(); // "{"n":1}"	// view단을 나타내는 접두어, 접미어가 있는게 아님 -> @ResponseBody 필요하다.
+		
+	}
+	
+/*
+	@ResponseBody 란?
+	메소드에 @ResponseBody Annotation이 되어 있으면 return 되는 값은 View 단 페이지를 통해서 출력되는 것이 아니라 
+	return 되어지는 값 그 자체를 웹브라우저에 바로 직접 쓰여지게 하는 것이다. 일반적으로 JSON 값을 Return 할때 많이 사용된다.  
+   
+	>>> 스프링에서 json 또는 gson을 사용한 ajax 구현시 데이터를 화면에 출력해 줄때 한글로 된 데이터가 '?'로 출력되어 한글이 깨지는 현상이 있다. 
+		이것을 해결하는 방법은 @RequestMapping 어노테이션의 속성 중 produces="text/plain;charset=UTF-8" 를 사용하면 
+		응답 페이지에 대한 UTF-8 인코딩이 가능하여 한글 깨짐을 방지 할 수 있다. <<< 
+*/
+	
+	@ResponseBody
+	@RequestMapping(value="/test/ajax_select.action", method = {RequestMethod.GET}, produces="text/plain;charset=UTF-8") // 오로지 GET방식만 허락하는 것임.
+	public String ajax_select() {
+		
+		List<TestVO> testvoList = service.test_select();
+		
+		JSONArray jsonArr = new JSONArray(); // [] @ResponseBody 사용시 []에 다 담겨짐
+		
+		if(testvoList != null) {
+			for(TestVO vo : testvoList) {
+				JSONObject jsonObj = new JSONObject(); 		// {}			 {}
+				jsonObj.put("no", vo.getNo());		   		// {"no":"101"}	 {"no":"102"}
+				jsonObj.put("name", vo.getName());	   		// {"no":"101","name":"이순신"}  {"no":"102","name":"엄정화"}
+				jsonObj.put("writeday", vo.getWriteday());	// {"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}  ,{"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}
+				
+				jsonArr.put(jsonObj);						// [{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}, {"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}]
+			}// end of for----------------------------------
 		}
 		
-	/*
-		@ResponseBody 란?
-		메소드에 @ResponseBody Annotation이 되어 있으면 return 되는 값은 View 단 페이지를 통해서 출력되는 것이 아니라 
-		return 되어지는 값 그 자체를 웹브라우저에 바로 직접 쓰여지게 하는 것이다. 일반적으로 JSON 값을 Return 할때 많이 사용된다.  
-	   
-		>>> 스프링에서 json 또는 gson을 사용한 ajax 구현시 데이터를 화면에 출력해 줄때 한글로 된 데이터가 '?'로 출력되어 한글이 깨지는 현상이 있다. 
-			이것을 해결하는 방법은 @RequestMapping 어노테이션의 속성 중 produces="text/plain;charset=UTF-8" 를 사용하면 
-			응답 페이지에 대한 UTF-8 인코딩이 가능하여 한글 깨짐을 방지 할 수 있다. <<< 
-	*/
+		return jsonArr.toString(); // "[{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}, {"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}]"
 		
-		@ResponseBody
-		@RequestMapping(value="/test/ajax_select.action", method = {RequestMethod.GET}, produces="text/plain;charset=UTF-8") // 오로지 GET방식만 허락하는 것임.
-		public String ajax_select() {
+	}
+		
+	// === return 타입을 String 대신에 ModelAndView 를 사용해보겠습니다. === //
+	@RequestMapping(value="/test/test_form_vo_modelandview.action") // GET방식 및  POST방식 둘 모두 허락하는 것임.  
+	public ModelAndView test_form(HttpServletRequest request, TestVO vo, ModelAndView mav) {
+		
+		String method = request.getMethod();
+		
+		if("GET".equalsIgnoreCase(method)) { // GET 방식이라면 
+			mav.setViewName("test/test_form_vo_modelandview");
+		 // view 단 페이지의 파일명 지정하기
+		 // /WEB-INF/views/test/test_form_vo_modelandview.jsp 페이지를 만들어야 한다.
+		}
+		else { // POST 방식이라면
+						
+			int n = service.test_insert(vo);
 			
-			List<TestVO> testvoList = service.test_select();
-			
-			JSONArray jsonArr = new JSONArray(); // [] @ResponseBody 사용시 []에 다 담겨짐
-			
-			if(testvoList != null) {
-				for(TestVO vo : testvoList) {
-					JSONObject jsonObj = new JSONObject(); 		// {}			 {}
-					jsonObj.put("no", vo.getNo());		   		// {"no":"101"}	 {"no":"102"}
-					jsonObj.put("name", vo.getName());	   		// {"no":"101","name":"이순신"}  {"no":"102","name":"엄정화"}
-					jsonObj.put("writeday", vo.getWriteday());	// {"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}  ,{"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}
-					
-					jsonArr.put(jsonObj);						// [{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}, {"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}]
-				}// end of for----------------------------------
+			if(n==1) {
+				mav.setViewName("redirect:/test/test_select_modelandview.action");
+			//  /test/test_select_modelandview.action 페이지로 redirect(페이지이동)해라는 말이다.  
 			}
-			
-			return jsonArr.toString(); // "[{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}, {"no":"102","name":"엄정화", "writeday":"2022-04-19 15:22:50"}]"
-			
- 		}
+			else {
+				mav.setViewName("redirect:/test/test_form_vo_modelandview.action");
+			//  /test/test_form_vo_modelandview.action 페이지로 redirect(페이지이동)해라는 말이다.	
+			}
+		}
 		
+		return mav;
+	}
+	
+	
+	@RequestMapping(value="/test/test_select_modelandview.action")
+	public ModelAndView test_select_modelandview(ModelAndView mav) {
 		
+		List<TestVO> testvoList = service.test_select();
+		
+		mav.addObject("testvoList", testvoList);
+		mav.setViewName("test/test_select_modelandview");
+	    //  /WEB-INF/views/test/test_select_modelandview.jsp 페이지를 만들어야 한다.
+		
+		return mav;
+	}
+	
 	// ======== ***** spring 기초 끝 ***** ======== //
+	
+	
+	// ======== tiles연습 시작 ======== //
+	@RequestMapping(value="/test/tiles_test_1.action")
+	public String tiles_test_1() {
+		
+		return "tiles_test_1.tiles1";
+	//	/WEB-INF/views/tiles1/tiles_test_1.jsp 페이지를 만들어야 한다.
+		
+	}	
+	
+	@RequestMapping(value="/test/tiles_test_2.action")
+	public String tiles_test_2() {
+		
+		return "test/tiles_test_2.tiles1";
+	//	/WEB-INF/views/tiles1/test/tiles_test_2.jsp 페이지를 만들어야 한다.
+		
+	}
+	
+	@RequestMapping(value="/test/tiles_test_3.action")
+	public String tiles_test_3() {
+		
+		return "test/sample/tiles_test_3.tiles1";
+	//	/WEB-INF/views/tiles1/test/sample/tiles_test_3.jsp 페이지를 만들어야 한다.
+		
+	}
+	
+	/////////////////////////////////////////////////////////////////////////
+	
+	@RequestMapping(value="/test/tiles_test_4.action")
+	public ModelAndView tiles_test_4(ModelAndView mav) {
+		
+		mav.setViewName("tiles_test_4.tiles2");
+	//	/WEB-INF/views/tiles2/tiles_test_4.jsp 페이지를 만들어야 한다.
+		
+		return mav;
+	}	
+	
+	@RequestMapping(value="/test/tiles_test_5.action")
+	public ModelAndView tiles_test_5(ModelAndView mav) {
+		
+		mav.setViewName("test/tiles_test_5.tiles2");
+	//	/WEB-INF/views/tiles2/test/tiles_test_5.jsp 페이지를 만들어야 한다.
+		
+		return mav;
+	}
+	
+	@RequestMapping(value="/test/tiles_test_6.action")
+	public ModelAndView tiles_test_6(ModelAndView mav) {
+		
+		mav.setViewName("test/tiles_test_6.tiles2");
+	//	/WEB-INF/views/tiles2/test/sample/tiles_test_6.jsp 페이지를 만들어야 한다.
+		
+		return mav;
+	}
+	// ======== tiles연습 끝 ======== // 
+	
+	
+	/////////////////////////////////////////////////////////////////////////
 }
