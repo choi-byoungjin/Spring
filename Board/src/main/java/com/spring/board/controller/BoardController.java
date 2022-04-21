@@ -3,6 +3,7 @@ package com.spring.board.controller;
 import java.util.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.json.*;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.spring.board.common.MyUtil;
 import com.spring.board.common.Sha256;
 import com.spring.board.model.*;
 import com.spring.board.service.*;
@@ -383,7 +385,9 @@ public class BoardController {
 	
 	// === #36. 메인 페이지 요청 === //
 	@RequestMapping(value="/index.action")
-	public ModelAndView index(ModelAndView mav) {
+	public ModelAndView index(ModelAndView mav, HttpServletRequest request) {
+		
+		getCurrentURL(request); // 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 호출
 		
 		List<String> imgfilenameList = service.getImgfilenameList();
 		
@@ -463,8 +467,20 @@ public class BoardController {
 				
 				else { // 암호를 마지막으로 변경한 것이 3개월이 이내인 경우
 					
-					mav.setViewName("redirect:/index.action"); // 시작페이지로 이동
+					// 로그인을 해야만 접근할 수 있는 페이지에 로그인을 하지 않은 상태에서 접근을 시도한 경우 
+					// "먼저 로그인을 하세요!!" 라는 메시지를 받고서 사용자가 로그인을 성공했다라면
+					// 화면에 보여주는 페이지는 시작페이지로 가는 것이 아니라
+					// 조금전 사용자가 시도하였던 로그인을 해야만 접근할 수 있는 페이지로 가기 위한 것이다.
 					
+					String goBackURL = (String) session.getAttribute("goBackURL");
+					
+					if(goBackURL !=  null) {
+						mav.setViewName("redirect:"+goBackURL);
+						session.removeAttribute("goBackURL"); // 세션에서 반드시 제거해주어야 한다.
+					}
+					else {
+						mav.setViewName("redirect:/index.action"); // 시작페이지로 이동
+					}
 				}
 				
 			}
@@ -473,5 +489,204 @@ public class BoardController {
 		
 		return mav;
 	}
+	
+	
+	// === #50. 로그아웃 처리하기 === //	
+	@RequestMapping(value="/logout.action")
+	public ModelAndView logout(ModelAndView mav, HttpServletRequest request) {
+		
+	/*	
+		// 로그아웃시 시작페이지로 돌아가는 것임 //
+		HttpSession session = request.getSession();
+		session.invalidate();
+		
+		String message = "로그아웃 되었습니다.";
+		String loc = request.getContextPath()+"/index.action";
+		
+		mav.addObject("message", message);
+		mav.addObject("loc", loc);
+		mav.setViewName("msg");
+		// /WEB-INF/views/msg.jsp
+		
+		return mav;
+	*/	
+		
+		// 로그아웃시 현재 보았던 그 페이지로 돌아가는 것임 //
+		HttpSession session = request.getSession();
+		
+		String goBackURL = (String) session.getAttribute("goBackURL");
+		
+		session.invalidate();
+		
+		String message = "로그아웃 되었습니다.";
+		
+		String loc = "";
+		if(goBackURL != null) {
+			loc = request.getContextPath()+goBackURL;
+		}
+		else {
+			loc = request.getContextPath()+"/index.action";
+		}
+		
+		mav.addObject("message", message);
+		mav.addObject("loc", loc);
+		mav.setViewName("msg");
+		// /WEB-INF/views/msg.jsp
+		
+		return mav;
+	}
+
+	
+	// === #51. 게시판 글쓰기 폼페이지 요청 === //
+	@RequestMapping(value="/add.action")
+	public ModelAndView requiredLogin_add(HttpServletRequest request, HttpServletResponse response, ModelAndView mav) {
+		
+	//	getCurrentURL(request); // 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 호출 // 반드시 로그인 해야 들어갈 수 있기때문에 주석처리
+		
+		mav.setViewName("board/add.tiles1");
+		// /WEB-INF/views/tiles1/board/add.jsp 파일을 생성한다.
+		
+		return mav;
+	}
+	
+	
+	// === #54. 게시판 글쓰기 완료 요청=== //
+	@RequestMapping(value="/addEnd.action", method= {RequestMethod.POST})
+	public ModelAndView addEnd(ModelAndView mav, BoardVO boardvo) {
+		
+	/*
+       form 태그의 name 명과  BoardVO 의 필드명이 같다라면 
+       request.getParameter("form 태그의 name명"); 을 사용하지 않더라도
+             자동적으로 BoardVO boardvo 에 set 되어진다.
+    */
+		
+		int n = service.add(boardvo); // <== 파일첨부가 없는 글쓰기
+		
+		if(n==1) {
+			mav.setViewName("redirect:/list.action");
+			//	/list.action 페이지로 redirect(페이지이동)하라는 말이다.
+		}
+		else {
+			mav.setViewName("board/error/add_error.tiles1");
+			// /WEB-INF/views/tiles1/board/error/add_error.jsp 파일을 생성한다.	
+		}
+		
+		return mav;
+	}
+	
+	
+	
+	// === #58.글목록 보기 페이지 요청 === //
+	@RequestMapping(value="/list.action")
+	public ModelAndView list(ModelAndView mav, HttpServletRequest request) {
+		
+		getCurrentURL(request); // 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 호출 
+		
+		List<BoardVO> boardList = null;
+		
+		//////////////////////////////////////////////////////
+		// === #69. 글조회수(readCount)증가 (DML문 update)는
+		//          반드시 목록보기에 와서 해당 글제목을 클릭했을 경우에만 증가되고,
+		//          웹브라우저에서 새로고침(F5)을 했을 경우에는 증가가 되지 않도록 해야 한다.
+		//          이것을 하기 위해서는 session 을 사용하여 처리하면 된다.
+		HttpSession session = request.getSession();
+		session.setAttribute("readCountPermission", "yes");
+		/*
+			session 에  "readCountPermission" 키값으로 저장된 value값은 "yes" 이다.
+			session 에  "readCountPermission" 키값에 해당하는 value값 "yes"를 얻으려면 
+			반드시 웹브라우저에서 주소창에 "/list.action" 이라고 입력해야만 얻어올 수 있다. 
+		 */
+		//////////////////////////////////////////////////////
+		
+		// == 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기 == //
+		boardList = service.boardListNoSearch();
+		
+		
+		///////////////////////////////////////////////////////////////////////
+		
+		mav.addObject("boardList", boardList);		
+		mav.setViewName("board/list.tiles1");
+		// /WEB-INF/views/tiles1/board/list.jsp 파일을 생성한다.
+		
+		return mav;
+	}
+	
+	
+	// === #62. 글1개를 보여주는 페이지 요청 === //	
+	@RequestMapping(value="/view.action")
+	public ModelAndView view(ModelAndView mav, HttpServletRequest request) {
+		
+		getCurrentURL(request); // 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 호출
+		
+		// 조회하고자 하는 글번호 받아오기
+		String seq = request.getParameter("seq");
+		
+		try {
+			Integer.parseInt(seq);
+			
+			Map<String, String> paraMap = new HashMap<>();
+			paraMap.put("seq", seq);
+			
+			HttpSession session = request.getSession();
+			MemberVO loginuser = (MemberVO) session.getAttribute("loginuser");
+			
+			String login_userid = null;
+			if(loginuser != null) {
+				login_userid = loginuser.getUserid();
+				// login_userid 는 로그인 되어진 사용자의 userid 이다.
+			}
+			paraMap.put("login_userid", login_userid);
+						
+			// === #68. !!! 중요 !!! 
+            //     글1개를 보여주는 페이지 요청은 select 와 함께 
+			//     DML문(지금은 글조회수 증가인 update문)이 포함되어져 있다.
+			//     이럴경우 웹브라우저에서 페이지 새로고침(F5)을 했을때 DML문이 실행되어
+			//     매번 글조회수 증가가 발생한다.
+			//     그래서 우리는 웹브라우저에서 페이지 새로고침(F5)을 했을때는
+			//     단순히 select만 해주고 DML문(지금은 글조회수 증가인 update문)은 
+			//     실행하지 않도록 해주어야 한다. !!! === //			
+			
+			// 위의 글목록보기 #69. 에서 session.setAttribute("readCountPermission", "yes"); 해두었다.
+			BoardVO boardvo = null;
+			if("yes".equals(session.getAttribute("readCountPermission")) ) {
+				// 글목록보기를 클릭한 다음에 특정글을 조회해온 경우이다.
+				
+				boardvo = service.getView(paraMap);
+				// 글조회수 증가와 함께 글1개를 조회를 해주는 것
+				
+				session.removeAttribute("readCountPermission");
+				// 중요함!! session 에 저장된 readCountPermission 을 삭제한다.
+			}
+			else {
+				// 웹브라우저에서 새로고침(F5)을 클릭한 경우이다.
+				
+				boardvo = service.getViewWithNoAddCount(paraMap);
+				// 글조회수 증가는 없고 단순히 글1개 조회만을 해주는 것이다.
+			}
+			
+			mav.addObject("boardvo", boardvo);
+		} catch(NumberFormatException e) {
+			
+		}
+		
+		mav.setViewName("board/view.tiles1");
+		
+		return mav;
+	}
+	
+	
+	
+	
+	
+	////////////////////////////////////////////////////////////////////////////////////
+	
+	// === 로그인 또는 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 생성 == //
+	public void getCurrentURL(HttpServletRequest request) {
+		HttpSession session = request.getSession();
+		session.setAttribute("goBackURL", MyUtil.getCurrentURL(request));
+	}	
+	
+	////////////////////////////////////////////////////////////////////////////////////
+	
 	// ================== ***** 게시판 끝 ***** ========================= //
 }

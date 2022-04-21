@@ -75,4 +75,38 @@
 		where userid = #{userid} <!-- dao의 userid -->
 	</update>
 	
+	
+	
+	<!-- ==== #57. 글쓰기(파일첨부가 없는 글쓰기) ==== -->
+	<insert id="add" parameterType="com.spring.board.model.BoardVO">
+		insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+		values(boardSeq.nextval, #{fk_userid}, #{name}, #{subject}, #{content}, #{pw}, default, default, default)	
+	</insert>
+	
+	
+	<!--   ==== #61. 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기 ==== -->
+	<select id="boardListNoSearch" resultType="com.spring.board.model.BoardVO">
+		select seq, fk_userid, name, subject  
+		     , readCount, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate
+		from tbl_board
+		where status = 1
+		order by seq desc
+	</select>
+	
+	
+	<!-- ==== #66. 글 1개 조회하기 ==== -->
+	<select id="getView" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
+		select seq, fk_userid, name, subject, content, readCount 
+			 , to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate
+		from tbl_board
+		where status = 1 and seq = #{seq}
+	</select>
+	
+	
+	<!-- ==== #67. 글조회수 1증가하기 ==== -->
+	<update id="setAddReadCount" parameterType="String">
+		update tbl_board set readCount = readCount + 1
+		where seq = #{seq}
+	</update>
+	
 </mapper>

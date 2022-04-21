@@ -24,5 +24,16 @@ public interface InterBoardDAO {
 
 	// === tbl_member 테이블의 idle 컬럼의 값을 1로 변경하기 === //
 	int updateIdle(String string);
+
+	// 글쓰기(파일첨부가 없는 글쓰기)
+	int add(BoardVO boardvo);
+
+	// 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기
+	List<BoardVO> boardListNoSearch();
+
+	// 글 1개 조회하기
+	BoardVO getView(Map<String, String> paraMap);
+	// 글조회수 1증가하기
+	void setAddReadCount(String seq);
 	
 }

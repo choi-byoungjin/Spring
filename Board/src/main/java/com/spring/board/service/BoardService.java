@@ -110,4 +110,56 @@ public class BoardService implements InterBoardService {
 		return loginuser;
 	}
 
+	
+	// ==== #55. 글쓰기(파일첨부가 없는 글쓰기) ==== // 
+	@Override
+	public int add(BoardVO boardvo) {
+
+		
+		
+		int n = dao.add(boardvo);
+		
+		return n;
+	}
+
+	
+	// ==== #59. 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기 ==== //
+	@Override
+	public List<BoardVO> boardListNoSearch() {
+		List<BoardVO> boardList = dao.boardListNoSearch();
+		return boardList;
+	}
+
+
+	// ==== #63. 글조회수 증가와 함께 글1개를 조회를 해주는 것 ==== //
+	// (먼저, 로그인을 한 상태에서 다른 사람의 글을 조회할 경우에는 글조회수 컬럼의 값을 1증가 해야한다.)
+	@Override
+	public BoardVO getView(Map<String, String> paraMap) {
+
+		BoardVO boardvo = dao.getView(paraMap);  // 글1개 조회하기	// 검색까지 포함되기때문에 map이다.
+		
+		String login_userid = paraMap.get("login_userid"); 
+		// paraMap.get("login_userid") 은 로그인을 한 상태이라면 로그인한 사용자의 userid 이고,
+		// 로그인을 하지 않은 상태이라면 paraMap.get("login_userid") 은 null 이다. 
+		
+		if(login_userid != null && 
+		   boardvo != null &&
+		  !login_userid.equals(boardvo.getFk_userid())) {
+			// 글조회수 증가는 로그인을 한 상태에서 다른 사람의 글을 읽을때만 증가하도록 한다.
+			
+			dao.setAddReadCount(boardvo.getSeq());	// 글조회수 1증가 하기
+			boardvo = dao.getView(paraMap);
+		}
+		
+		return boardvo;
+	}
+
+
+	// ==== #70. 글조회수 증가는 없고 단순히 글1개 조회만을 해주는 것이다. ==== //
+	@Override
+	public BoardVO getViewWithNoAddCount(Map<String, String> paraMap) {
+		BoardVO boardvo = dao.getView(paraMap);  // 글1개 조회하기
+		return boardvo;
+	}
+
 }
