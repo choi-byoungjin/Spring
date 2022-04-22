@@ -33,5 +33,14 @@ public interface InterBoardService {
 
 	// 글조회수 증가는 없고 단순히 글1개 조회만을 해주는 것이다.
 	BoardVO getViewWithNoAddCount(Map<String, String> paraMap);
+
+	// 1개글 수정하기
+	int edit(BoardVO boardvo);
+
+	// 1개글 삭제하기
+	int del(Map<String, String> paraMap);
+
+	// 댓글쓰기(transaction 처리)
+	int addComment(CommentVO commentvo) throws Throwable;
 	
 }

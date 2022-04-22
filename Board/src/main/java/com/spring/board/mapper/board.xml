@@ -96,10 +96,22 @@
 	
 	<!-- ==== #66. 글 1개 조회하기 ==== -->
 	<select id="getView" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
-		select seq, fk_userid, name, subject, content, readCount 
-			 , to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate
+		select previousseq, previoussubject
+		     , seq, fk_userid, name, subject, content, readCount, regDate, pw
+		     , nextseq, nextsubject
+		from
+		(
+		select lag(seq,1) over(order by seq desc) AS previousseq
+		     , lag(subject,1) over(order by seq desc) AS previoussubject       
+		     , seq, fk_userid, name, subject, content, readCount 
+		     , to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate     
+		     , pw
+		     , lead(seq,1) over(order by seq desc) AS nextseq
+		     , lead(subject,1) over(order by seq desc)  AS nextsubject
 		from tbl_board
-		where status = 1 and seq = #{seq}
+		where status = 1
+		) V
+		where V.seq = #{seq}
 	</select>
 	
 	
@@ -109,4 +121,18 @@
 		where seq = #{seq}
 	</update>
 	
+	
+	<!-- ==== #75. 1개글 수정하기 ==== -->
+	<update id="edit" parameterType="com.spring.board.model.BoardVO">
+		update tbl_board set subject = #{subject} 
+        		            ,content = #{content}
+		where seq = #{seq} and pw = #{pw}
+	</update>
+	
+	
+	<!-- === #80. 1개글 삭제하기 === -->
+	<delete id="del" parameterType="HashMap">
+		delete from tbl_board
+		where seq = #{seq}
+	</delete>
 </mapper>

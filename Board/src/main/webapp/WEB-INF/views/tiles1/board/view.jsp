@@ -8,14 +8,69 @@
 
 <style type="text/css">
 
+	span.move {cursor: pointer; color: navy;}
+	.moveColor {color: #660029; font-weight: bold; background-color: #ffffe6;}
+
 </style>
 
 <script type="text/javascript">
 
 	$(document).ready(function(){
 		
-	});
+		$("span.move").hover(function(){
+								$(this).addClass("moveColor"); // this는 화살표함수 불가능 function 필요
+							}, 
+							function(){
+								$(this).removeClass("moveColor");	
+							});
+		
+	});// end of $(document).ready(function(){})----------------------------------------------------
 
+	// Function Declaration
+	
+	// == 댓글쓰기 ==
+	function goAddWrite() {
+		
+		const commentContent = $("input#commentContent").val().trim();
+		if(commentContent == "") {
+			alert("댓글 내용을 입력하세요!!");
+			return; // 종료
+		}
+		
+		goAddWrite_noAttach();
+		
+	}// end of function goAddWrite() {}------------------------------------------------------------
+	
+	// 파일첨부가 없는 댓글쓰기
+	function goAddWrite_noAttach() {
+		
+		<%--
+			// 보내야할 데이터를 선정하는 두번째 방법
+			// jQuery에서 사용하는 것으로써,
+			// form태그의 선택자.serialize(); 을 해주면 form 태그내의 모든 값들을 name값을 키값으로 만들어서 보내준다. 
+			   const queryString = $("form[name=addWriteFrm]").serialize(); 
+		--%>
+		
+		$.ajax({
+			url:"<%=request.getContextPath()%>/addComment.action",
+			data:{"fk_userid":$("input#fk_userid")
+				, "name":$("input#name")
+				, "content":$("input#commentContent")
+				, "parentSeq":$("input#parentSeq")},
+	   /* 	또는 
+	   		data:queryString, */
+			type:"POST",
+			dataType:"JSON",
+			success:function(json){
+				
+			},
+			error: function(request, status, error){
+				alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+			}
+		});
+		
+	}// end of function goAddWrite_noAttach() {}-----------------------------------------------------
+	
 </script>
 
 <div style="display: flex;">
@@ -58,11 +113,54 @@
 				<td>${requestScope.boardvo.regDate}</td>
 			</tr>
 		</table>
+		<br/>
+		
+		<div style="margin-bottom: 1%;">이전글제목&nbsp;&nbsp;<span class="move" onclick="javascript:location.href='view_2.action?seq=${requestScope.boardvo.previousseq}&readCountPermission=yes'">${requestScope.boardvo.previoussubject}</span></div>
+		<div style="margin-bottom: 1%;">다음글제목&nbsp;&nbsp;<span class="move" onclick="javascript:location.href='view_2.action?seq=${requestScope.boardvo.nextseq}&readCountPermission=yes'">${requestScope.boardvo.nextsubject}</span></div>
+		<br/>
+		
+		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/list.action'">전체목록보기</button>
+		
+		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/edit.action?seq=${requestScope.boardvo.seq}'">글수정하기</button>
+		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/del.action?seq=${requestScope.boardvo.seq}'">글삭제하기</button>
+		
+		<%-- === #83. 댓글쓰기 폼 추가 === --%>
+		<c:if test="${not empty sessionScope.loginuser}">
+			<h3 style="margin-top: 50px;">댓글쓰기</h3>
+		
+			<form name="addWriteFrm" id="addWriteFrm" style="margin-top: 20px;">
+				<table class="table" style="width: 1024px">
+					<tr style="height: 30px;">
+						<th width="10%" >성명</th>
+						<td>
+	                  		<input type="hidden" name="fk_userid" id="fk_userid" value="${sessionScope.loginuser.userid}" />
+	                  		<input type="text" name="name" id="name" value="${sessionScope.loginuser.name}" readonly />
+						</td>
+					</tr>
+					<tr style="height: 30px;">
+						<th width="10%">댓글내용</th>
+						<td>
+							<input type="text" name="content" id="commentContent" size="100" />
+							
+							<%-- 댓글에 달리는 원게시물  글번호(즉, 댓글의 부모글 글번호) --%>
+							<input type="hidden" name="parentSeq" id="parentSeq" value="${requestScope.boardvo.seq}"/>
+						</td>
+					</tr>
+					<tr>
+						<th colspan="2">
+							<button type="button" class="btn btn-success btn-sm mr-3" onclick="goAddWrite()">댓글쓰기 확인</button>
+							<button type="reset" class="btn btn-success btn-sm">댓글쓰기 취소</button>
+						</th>
+					</tr>										
+				</table>
+			</form>
+		</c:if>
+		
 	</c:if>
 
 	<c:if test="${empty requestScope.boardvo}">
 		<div style="padding: 50px 0; font-size: 16pt; color: red;">존재하지 않습니다</div>
 	</c:if>
-
+		
 </div>
 </div>

@@ -35,5 +35,11 @@ public interface InterBoardDAO {
 	BoardVO getView(Map<String, String> paraMap);
 	// 글조회수 1증가하기
 	void setAddReadCount(String seq);
+
+	// 1개글 수정하기
+	int edit(BoardVO boardvo);
+
+	// 1개글 삭제하기
+	int del(Map<String, String> paraMap);
 	
 }

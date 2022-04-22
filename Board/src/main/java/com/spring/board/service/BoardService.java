@@ -7,6 +7,9 @@ import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.spring.board.common.AES256;
 import com.spring.board.model.*;
@@ -160,6 +163,37 @@ public class BoardService implements InterBoardService {
 	public BoardVO getViewWithNoAddCount(Map<String, String> paraMap) {
 		BoardVO boardvo = dao.getView(paraMap);  // 글1개 조회하기
 		return boardvo;
+	}
+
+	
+	// === #73. 1개글 수정하기 === //	
+	@Override
+	public int edit(BoardVO boardvo) {
+		int n = dao.edit(boardvo);
+		return n;
+	}
+
+	
+	// === #78. 1개글 삭제하기 === //
+	@Override
+	public int del(Map<String, String> paraMap) {
+		int n = dao.del(paraMap);
+		return n;
+	}
+
+
+	// === #85. 댓글쓰기(transaction 처리) === //
+	// tbl_comment 테이블에 insert 된 다음에 
+	// tbl_board 테이블에 commentCount 컬럼이 1증가(update) 하도록 요청한다.
+	// 이어서 회원의 포인트를 50점을 증가하도록 한다.
+	// 즉, 2개이상의 DML 처리를 해야하므로 Transaction 처리를 해야 한다. (여기서는 3개의 DML 처리가 일어남)
+	// >>>>> 트랜잭션처리를 해야할 메소드에 @Transactional 어노테이션을 설정하면 된다. 
+	// rollbackFor={Throwable.class} 은 롤백을 해야할 범위를 말하는데 Throwable.class 은 error 및 exception 을 포함한 최상위 루트이다. 즉, 해당 메소드 실행시 발생하는 모든 error 및 exception 에 대해서 롤백을 하겠다는 말이다.
+	@Override
+	@Transactional(propagation=Propagation.REQUIRED, isolation=Isolation.READ_COMMITTED, rollbackFor= {Throwable.class})
+	public int addComment(CommentVO commentvo) throws Throwable {
+
+		return 0;
 	}
 
 }

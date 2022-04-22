@@ -130,5 +130,21 @@ public class BoardDAO implements InterBoardDAO {
 		sqlsession.update("board.setAddReadCount", seq);
 		
 	}
+
+	
+	// ==== #74. 1개글 수정하기 ==== //
+	@Override
+	public int edit(BoardVO boardvo) {
+		int n = sqlsession.update("board.edit", boardvo); 
+		return n;
+	}
+
+	
+	// === #79. 1개글 삭제하기 === //
+	@Override
+	public int del(Map<String, String> paraMap) {
+		int n = sqlsession.delete("board.del", paraMap);
+		return n;
+	}
 		
 }

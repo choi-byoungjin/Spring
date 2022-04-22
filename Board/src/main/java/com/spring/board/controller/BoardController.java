@@ -621,6 +621,9 @@ public class BoardController {
 		// 조회하고자 하는 글번호 받아오기
 		String seq = request.getParameter("seq");
 		
+		// 이전글제목, 다음글제목 클릭했을 때 readCountPermission 받아오기
+		String readCountPermission = request.getParameter("readCountPermission");
+		
 		try {
 			Integer.parseInt(seq);
 			
@@ -672,6 +675,176 @@ public class BoardController {
 		mav.setViewName("board/view.tiles1");
 		
 		return mav;
+	}
+	
+	
+	
+	// === #71. 글 수정페이지 요청 === //	
+	@RequestMapping(value="/edit.action")
+	public ModelAndView requiredLogin_edit(HttpServletRequest request, HttpServletResponse response, ModelAndView mav) {
+		
+		// 글 수정해야 할 글번호 가져오기
+		String seq = request.getParameter("seq");
+		
+		// 글 수정해야 할 글1개 내용 가져오기
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("seq", seq);
+		
+		BoardVO boardvo = service.getViewWithNoAddCount(paraMap); // 이미 만들어둔 글 하나만 가져오는 것
+		// 글조회수(readCount) 증가 없이 단순히 글1개만 조회해주는 것이다.
+		
+		HttpSession session = request.getSession();
+		MemberVO loginuser = (MemberVO)session.getAttribute("loginuser");
+		
+		if( !loginuser.getUserid().equals(boardvo.getFk_userid()) ) {
+			String message = "다른 사용자의 글은 수정이 불가합니다.";
+			String loc = "javascript:history.back()";
+			
+			mav.addObject("message", message);
+			mav.addObject("loc", loc);
+			mav.setViewName("msg");
+		}
+		else {
+			// 자신의 글을 수정할 경우
+			// 가져온 1개글을 글수정할 폼이 있는 view 단으로 보내준다.
+			mav.addObject("boardvo", boardvo);
+			mav.setViewName("board/edit.tiles1");
+		}
+		
+		return mav;
+	}
+	
+	
+	
+	// === #72. 글수정 페이지 완료하기 === //	
+	@RequestMapping(value="/editEnd.action", method= {RequestMethod.POST})
+	public ModelAndView editEnd(ModelAndView mav, BoardVO boardvo, HttpServletRequest request) {
+		
+		/*			
+			글 수정을 하려면 원본글의 글암호와 수정시 입력해준 암호가 일치할때만
+			글 수정이 가능하도록 해야 한다.
+		 */
+		int n = service.edit(boardvo);
+		// n 이 1 이라면 정상적으로 변경됨.
+		// n 이 0이라면 글수정에 필요한 글암호가 틀린경우임.
+		
+		if(n==0) {
+			mav.addObject("message", "암호가 일치하지 않아  글 수정이 불가합니다.");
+			mav.addObject("loc", "javascript:history.back()");
+		}
+		else {
+			mav.addObject("message", "글 수정 성공!!");
+			mav.addObject("loc", request.getContextPath()+"/view.action?seq="+boardvo.getSeq());
+		}
+		
+		mav.setViewName("msg");
+		
+		return mav;
+	}
+	
+	
+	// === #76. 글삭제 페이지 요청 === //	
+	@RequestMapping(value="/del.action")
+	public ModelAndView requiredLogin_del(HttpServletRequest request, HttpServletResponse response, ModelAndView mav) {
+		
+		// 삭제해야 할 글번호 가져오기
+		String seq = request.getParameter("seq");
+		
+		// 삭제해야할 글1새 내용 가져와서 로그인한 사람이 쓴 글이라면 글삭제가 가능하지만
+		// 다른 사람이 쓴 글은 삭제가 불가하도록 해야 한다.
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("seq", seq);
+				
+		BoardVO boardvo = service.getViewWithNoAddCount(paraMap); // 이미 만들어둔 글 하나만 가져오는 것
+		// 글조회수(readCount) 증가 없이 단순히 글1개만 조회해주는 것이다.
+		
+		HttpSession session = request.getSession();
+		MemberVO loginuser = (MemberVO)session.getAttribute("loginuser");
+		
+		if( !loginuser.getUserid().equals(boardvo.getFk_userid()) ) {
+			String message = "다른 사용자의 글은 삭제가 불가합니다.";
+			String loc = "javascript:history.back()";
+			
+			mav.addObject("message", message);
+			mav.addObject("loc", loc);
+			mav.setViewName("msg");
+		}
+		else {
+			// 자신의 글을 삭제할 경우
+			// 글작성시 입력해준 글암호와 일치하는지 여부를 알아오도록 암호를 입력받아주는 del.jsp 페이지를 띄우도록 한다.
+			mav.addObject("pw", boardvo.getPw());
+			mav.addObject("seq", seq);
+			mav.setViewName("board/del.tiles1");
+		}
+		
+		return mav;
+	}
+	
+	
+	// === #77. 글삭제 페이지 완료하기 === //	
+	@RequestMapping(value="/delEnd.action", method= {RequestMethod.POST})
+	public ModelAndView delEnd(ModelAndView mav, HttpServletRequest request) {
+		
+		String seq = request.getParameter("seq");
+		
+		Map<String, String> paraMap = new HashMap<>(); // map은 확장성이 큰 장점이 있고, 유지보수가 수월하다.
+		paraMap.put("seq", seq);
+		
+		int n = service.del(paraMap);
+		
+		if(n==1) {
+			mav.addObject("message", "글 삭제 성공!!");
+			mav.addObject("loc", request.getContextPath()+"/list.action");
+		}
+		else {
+			mav.addObject("message", "글 삭제 실패!!");
+			mav.addObject("loc", "javascript:history.back()");
+		}
+		
+		mav.setViewName("msg");
+		
+		return mav;
+		
+	}
+	
+	
+	@RequestMapping(value="/view_2.action")
+	public ModelAndView view_2(ModelAndView mav, HttpServletRequest request) {
+		
+		getCurrentURL(request); // 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 호출
+		
+		// 조회하고자 하는 글번호 받아오기
+		String seq = request.getParameter("seq");
+		
+		HttpSession session = request.getSession();
+		session.setAttribute("readCountPermission", "yes");
+		
+		mav.setViewName("redirect:/view.action?seq="+seq);
+		
+		return mav;
+	}
+	
+	
+	// === #84. 댓글쓰기(Ajax 로 처리) === //
+	@ResponseBody
+	@RequestMapping(value="/addComment.action", method= {RequestMethod.POST})
+	public String addComment(CommentVO commentvo) {
+		// 댓글쓰기에 첨부파일이 없는 경우
+		
+		int n = 0;
+
+		try {
+			n = service.addComment(commentvo);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}		
+		// 댓글쓰기(insert) 및 원게시물(tbl_board 테이블)에 댓글의 개수 증가(update 1씩 증가)하기 
+		// 이어서 회원의 포인트를 50점을 증가하도록 한다. (tbl_member 테이블에 point 컬럼의 값을 50 증가하도록 update 한다.) 
+		
+		JSONObject jsonObj = new JSONObject();
+		jsonObj.put("n", n);
+		
+		return jsonObj.toString();
 	}
 	
 	
