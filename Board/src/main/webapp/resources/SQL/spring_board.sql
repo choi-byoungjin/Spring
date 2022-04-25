@@ -243,3 +243,75 @@ select *
 from tbl_member;
 
 commit
+
+
+-- ==== Transaction 처리를 위한 시나리오 만들기 ==== --
+---- 회원들이 게시판에 글쓰기를 하면 글작성 1건당 POINT 를 100점을 준다.
+---- 회원들이 게시판에서 댓글쓰기를 하면 댓글작성 1건당 POINT 를 50점을 준다.
+---- 그런데 일부러 POINT 는 300을 초과할 수 없다.
+
+select *
+from tbl_member;
+
+update tbl_member set point = 0;
+
+commit;
+
+
+-- tbl_member 테이블에 POINT 컬럼에 Check 제약을 추가한다.
+
+alter table tbl_member
+add constraint CK_tbl_member_point check( point between 0 and 300 );
+-- Table TBL_MEMBER이(가) 변경되었습니다.
+
+update tbl_member set point = 301
+where userid = 'choibj';
+/*
+오류 보고 -
+ORA-02290: check constraint (MYMVC_USER.CK_TBL_MEMBER_POINT) violated
+*/
+
+update tbl_member set point = 300
+where userid = 'choibj';
+
+commit;
+
+-----------------------------------------------------------------
+select *
+from tbl_comment
+
+select *
+from tbl_board;
+
+select userid, point
+from tbl_member
+where userid = 'eomjh';
+
+select userid, point
+from tbl_member
+where userid = 'choibj';
+
+
+--- *** transaction 처리를 위해서 일부러 만들어 두었던 포인트 체크제약을 없애겠다. *** ---
+--- *** tbl_member 테이블에 존재하는 제약조건 조회하기 *** ---
+select *
+from user_constraints
+where table_name = 'TBL_MEMBER';
+
+alter table tbl_member
+drop constraint CK_TBL_MEMBER_POINT;
+-- Table TBL_MEMBER이(가) 변경되었습니다.
+
+
+select name, content, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') AS regDate 
+from tbl_comment
+where status = 1 and parentSeq = 2
+order by seq desc;
+
+select *
+from tbl_board
+where subject like '%'||'korea'||'%';
+
+select *
+from tbl_board
+where lower(subject) like '%'||lower('koReA')||'%';

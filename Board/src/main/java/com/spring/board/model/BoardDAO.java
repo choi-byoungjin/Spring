@@ -146,5 +146,52 @@ public class BoardDAO implements InterBoardDAO {
 		int n = sqlsession.delete("board.del", paraMap);
 		return n;
 	}
+
+	
+	// === #86. 댓글쓰기(tbl_comment 테이블에 insert) === //
+	@Override
+	public int addComment(CommentVO commentvo) {
+		int n = sqlsession.insert("board.addComment", commentvo);
+		return n;
+	}
+
+	
+	// === #87-1. tbl_board 테이블에 commentCount 컬럼이 1증가(update) === //
+	@Override
+	public int updateCommentCount(String parentSeq) {
+		int n = sqlsession.update("board.updateCommentCount", parentSeq);
+		return n;
+	}
+
+	
+	// === #87-2. tbl_member 테이블의 point 컬럼의 값을 50점을 증가(update)
+	@Override
+	public int updateMemberPoint(Map<String, String> paraMap) {
+		int n = sqlsession.update("board.updateMemberPoint", paraMap);
+		return n;
+	}
+
+	
+	// === #92. 원게시물에 딸린 댓글들을 조회해오기 === //
+	@Override
+	public List<CommentVO> getCommentList(String parentSeq) {
+		List<CommentVO> commentList = sqlsession.selectList("board.getCommentList", parentSeq);
+		return commentList;
+	}
+
+	
+	// === #99. BoardAOP 클래스에 사용하는 것으로 특정 회원에게 특정 점수만큼 포인트를 증가하기 위한 것 === //
+	@Override
+	public void pointPlus(Map<String, String> paraMap) {
+		sqlsession.update("board.pointPlus", paraMap);
+	}
+
+	
+	// === #104. 페이징 처리를 안한 검색어가 있는 전체 글목록 보여주기 === //
+	@Override
+	public List<BoardVO> boardListSearch(Map<String, String> paraMap) {
+		List<BoardVO> boardList = sqlsession.selectList("board.boardListSearch", paraMap);
+		return boardList;
+	}
 		
 }

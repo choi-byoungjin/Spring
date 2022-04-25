@@ -10,12 +10,16 @@
 
 	span.move {cursor: pointer; color: navy;}
 	.moveColor {color: #660029; font-weight: bold; background-color: #ffffe6;}
+	td.comment {text-align: center;}
 
 </style>
 
 <script type="text/javascript">
 
 	$(document).ready(function(){
+		
+		goReadComment(); // 페이징 처리 안한 댓글 읽어오기
+	//	goViewComment(1); // 페이징 처리한 댓글 읽어오기
 		
 		$("span.move").hover(function(){
 								$(this).addClass("moveColor"); // this는 화살표함수 불가능 function 필요
@@ -53,16 +57,27 @@
 		
 		$.ajax({
 			url:"<%=request.getContextPath()%>/addComment.action",
-			data:{"fk_userid":$("input#fk_userid")
-				, "name":$("input#name")
-				, "content":$("input#commentContent")
-				, "parentSeq":$("input#parentSeq")},
+			data:{"fk_userid":$("input#fk_userid").val()
+				, "name":$("input#name").val()
+				, "content":$("input#commentContent").val()
+				, "parentSeq":$("input#parentSeq").val()},
 	   /* 	또는 
 	   		data:queryString, */
 			type:"POST",
 			dataType:"JSON",
 			success:function(json){
+				// "{"n":1,"name":"엄정화"}" 또는 "{"n":0, "name":"최병진"}"
 				
+				const n = json.n;
+				if(n == 0) {
+					alert(json.name + "님의 포인트는 300점을 초과할 수 없으므로 댓글쓰기가 불가합니다.");
+				}
+				else {
+					goReadComment(); // 페이징 처리 안한 댓글 읽어오기
+				//	goViewComment(1); // 페이징 처리한 댓글 읽어오기
+				}
+				
+				$("input#commentContent").val("");
 			},
 			error: function(request, status, error){
 				alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
@@ -70,6 +85,42 @@
 		});
 		
 	}// end of function goAddWrite_noAttach() {}-----------------------------------------------------
+	
+	// == 페이징 처리 안한 댓글 읽어오기 == //
+	function goReadComment() {
+		
+		$.ajax({
+			url:"<%=request.getContextPath()%>/readComment.action",
+			data:{"parentSeq":"${requestScope.boardvo.seq}"},
+			dataType:"JSON",
+			success:function(json){
+				// [{"name":"엄정화","regdate":"2022-04-25 10:13:41","content":"첫번째 댓글입니다."},{"name":"엄정화","regdate":"2022-04-25 10:13:00","content":"첫번째 댓글입니다."}]
+				
+				let html = "";
+				if(json.length > 0){
+					$.each(json, function(index, item){
+						html += "<tr>";
+						html += "<td class='comment'>"+(index+1)+"</td>";
+						html += "<td>"+item.content+"</td>";
+						html += "<td class='comment'>"+item.name+"</td>";
+						html += "<td class='comment'>"+item.regdate+"</td>";
+						html += "</tr>";
+					});
+				}
+				else {
+					html += "<tr>";
+					html += "<td colspan='4' class='comment'>댓글이 없습니다</td>";				
+					html += "</tr>";
+				}
+				
+				$("tbody#commentDisplay").html(html);
+			},
+			error: function(request, status, error){
+				alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+			}
+		});
+		
+	}// end of function goReadComment() {}-------------------------------------------------
 	
 </script>
 
@@ -156,6 +207,29 @@
 			</form>
 		</c:if>
 		
+		
+		<%-- === #94. 댓글 내용 보여주기 === --%>
+		<h3 style="margin-top: 50px;">댓글내용</h3>
+		<table class="table" style="width: 1024px; margin-top: 2%; margin-bottom: 3%;">
+			<thead>
+			<tr>
+				<th style="width: 6%;  text-align: center;">번호</th>
+				<th style="text-align: center;">내용</th>
+	            
+				<%-- 첨부파일 있는 경우 시작 --%>
+			<%-- 	
+				<th style="width: 15%;">첨부파일</th>
+				<th style="width: 8%;">bytes</th>
+			--%>	
+				<%-- 첨부파일 있는 경우 끝 --%>
+	            
+				<th style="width: 8%; text-align: center;">작성자</th>
+				<th style="width: 12%; text-align: center;">작성일자</th>
+			</tr>
+			</thead>
+			<tbody id="commentDisplay"></tbody>
+		</table>
+				
 	</c:if>
 
 	<c:if test="${empty requestScope.boardvo}">

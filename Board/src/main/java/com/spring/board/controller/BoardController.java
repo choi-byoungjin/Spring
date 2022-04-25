@@ -552,8 +552,8 @@ public class BoardController {
 	
 	// === #54. 게시판 글쓰기 완료 요청=== //
 	@RequestMapping(value="/addEnd.action", method= {RequestMethod.POST})
-	public ModelAndView addEnd(ModelAndView mav, BoardVO boardvo) {
-		
+//	public ModelAndView addEnd(ModelAndView mav, BoardVO boardvo) {		<== After Advice 를 사용하기 전
+	public ModelAndView pointPlus_addEnd(Map<String,String> paraMap, ModelAndView mav, BoardVO boardvo) {	//	<== After Advice 를 사용하기
 	/*
        form 태그의 name 명과  BoardVO 의 필드명이 같다라면 
        request.getParameter("form 태그의 name명"); 을 사용하지 않더라도
@@ -570,6 +570,13 @@ public class BoardController {
 			mav.setViewName("board/error/add_error.tiles1");
 			// /WEB-INF/views/tiles1/board/error/add_error.jsp 파일을 생성한다.	
 		}
+		
+		// === #96. After Advice 를 사용하기 === //
+		// 			글쓰기를 한 이후에 회원의 포인트를 100 점 증가
+		// == After Advice 를 사용하기 위해 파라미터를 생성하는 것임 ==
+		paraMap.put("fk_userid", boardvo.getFk_userid());
+		paraMap.put("point", "100");
+		//////////////////////////////////////////////////////
 		
 		return mav;
 	}
@@ -599,7 +606,26 @@ public class BoardController {
 		//////////////////////////////////////////////////////
 		
 		// == 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기 == //
-		boardList = service.boardListNoSearch();
+	//	boardList = service.boardListNoSearch();
+		
+		
+		// == #102. 페이징 처리를 안한 검색어가 있는 전체 글목록 보여주기 == //
+		String searchType = request.getParameter("searchType");
+		String searchWord = request.getParameter("searchWord");
+		
+		if(searchType == null) {
+			searchType = "";
+		}
+		
+		if(searchWord == null) {
+			searchWord = "";
+		}
+		
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("searchType", searchType);
+		paraMap.put("searchWord", searchWord);
+		
+		boardList = service.boardListSearch(paraMap);
 		
 		
 		///////////////////////////////////////////////////////////////////////
@@ -827,7 +853,7 @@ public class BoardController {
 	
 	// === #84. 댓글쓰기(Ajax 로 처리) === //
 	@ResponseBody
-	@RequestMapping(value="/addComment.action", method= {RequestMethod.POST})
+	@RequestMapping(value="/addComment.action", method= {RequestMethod.POST}, produces="text/plain;charset=UTF-8")
 	public String addComment(CommentVO commentvo) {
 		// 댓글쓰기에 첨부파일이 없는 경우
 		
@@ -843,12 +869,36 @@ public class BoardController {
 		
 		JSONObject jsonObj = new JSONObject();
 		jsonObj.put("n", n);
+		jsonObj.put("name", commentvo.getName());
 		
-		return jsonObj.toString();
+		return jsonObj.toString();	// "{"n":1,"name":"엄정화"}" 또는 "{"n":0, "name":"최병진"}"
 	}
 	
 	
-	
+	// === #90. 원게시물에 딸리 댓글들을 조회해오기(Ajax 로 처리) === //
+	@ResponseBody
+	@RequestMapping(value="/readComment.action", method= {RequestMethod.GET}, produces="text/plain;charset=UTF-8")
+	public String readComment(HttpServletRequest request) {
+		
+		String parentSeq = request.getParameter("parentSeq");
+		
+		List<CommentVO> commentList = service.getCommentList(parentSeq);
+		
+		JSONArray jsonArr = new JSONArray();	// []
+		
+		if( commentList != null ) {
+			for(CommentVO cmtvo : commentList) {
+				JSONObject jsonObj = new JSONObject();
+				jsonObj.put("name", cmtvo.getName());
+				jsonObj.put("content", cmtvo.getContent());
+				jsonObj.put("regdate", cmtvo.getRegDate());
+				
+				jsonArr.put(jsonObj);
+			}// end of for-------------------------------------------
+		}
+			
+		return jsonArr.toString();
+	}
 	
 	
 	////////////////////////////////////////////////////////////////////////////////////

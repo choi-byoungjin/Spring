@@ -84,10 +84,24 @@
 	</insert>
 	
 	
-	<!--   ==== #61. 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기 ==== -->
+	<!-- ==== #61. 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기 ==== -->
+	<!-- 
 	<select id="boardListNoSearch" resultType="com.spring.board.model.BoardVO">
 		select seq, fk_userid, name, subject  
 		     , readCount, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate
+		from tbl_board
+		where status = 1
+		order by seq desc
+	</select>
+	-->
+	
+	<!-- 먼저 #61을 주석처리를 하고서 아래의 작업을 한다. -->
+	<!-- ==== #95. 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기 ==== 
+					전체 글목록을 보여줄때 딸린 댓글의 갯수도 보여준다. -->
+	<select id="boardListNoSearch" resultType="com.spring.board.model.BoardVO">
+		select seq, fk_userid, name, subject  
+		     , readCount, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate
+		     , commentCount
 		from tbl_board
 		where status = 1
 		order by seq desc
@@ -135,4 +149,63 @@
 		delete from tbl_board
 		where seq = #{seq}
 	</delete>
+	
+	
+	<!-- === #88. 댓글쓰기(tbl_comment 테이블에 insert) === -->
+	<insert id="addComment" parameterType="com.spring.board.model.CommentVO">
+		<!-- 첨부파일이 없는 경우 -->
+		insert into tbl_comment(seq, fk_userid, name, content, regDate, parentSeq, status)
+		values(commentSeq.nextval, #{fk_userid}, #{name}, #{content}, default, #{parentSeq}, default)
+		
+		<!-- 첨부파일이 있는 경우 -->
+	</insert>
+	
+	<!--  === #89.-1  tbl_board 테이블에 commentCount 컬럼의 값을 1증가(update) === -->  
+	<update id="updateCommentCount" parameterType="String">
+		update tbl_board set commentCount = commentCount + 1 
+		where seq = #{parentSeq}
+	</update>
+    
+    <!-- === #89.-2  tbl_member 테이블에 point 컬럼의 값을 넘어온 숫자만큼(예: 50) 증가(update) === --> 
+	<update id="updateMemberPoint" parameterType="HashMap">
+		update tbl_member set point = point + to_number(#{point}) 
+		where userid = #{userid}
+	</update>
+	
+	
+	<!-- === #93. 원게시물에 딸린 댓글들을 조회해오기 === -->  
+    <!-- 첨부파일이 없는 경우  -->
+    <select id="getCommentList" parameterType="String" resultType="com.spring.board.model.CommentVO"> 
+       select name, content, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') AS regDate 
+       from tbl_comment
+       where status = 1 and parentSeq = #{parentSeq}
+       order by seq desc
+    </select>
+    
+    
+    <!-- === #99. BoardAOP 클래스에 사용하는 것으로 특정 회원에게 특정 점수만큼 포인트를 증가하기 위한 것 === -->
+    <update id="pointPlus" parameterType="HashMap">
+    	update tbl_member set point = point + to_number(#{point})
+    	where userid = #{fk_userid}
+    </update>
+    
+    <!-- #### 중요 #### 
+		HashMap 타입으로 매개변수를 받아온 것을 꺼내서 사용할때 
+		1. 데이터로 사용할때는 #{key명} 이고,
+		2. 식별자(테이블명, 컬럼명)로 사용할때는 ${key명} 이고,
+		3. myBatis 에서 제공하는 if 엘리먼트나 choose 엘리먼트 안에서 사용할때는 
+		그냥 <if test="key명"> <when test="key명"> 으로 사용한다. 
+	-->	
+    <!-- === #105. 페이징 처리를 안한 검색어가 있는 전체 글목록 보여주기 === -->
+    <select id="boardListSearch" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
+    	select seq, fk_userid, name, subject  
+		     , readCount, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate
+		     , commentCount
+		from tbl_board
+		where status = 1
+		<if test='searchType != "" and searchWord != ""'> <!-- 따옴표 주의 -->
+		and lower(${searchType}) like '%'||lower(#{searchWord})||'%'
+		</if>
+		order by seq desc
+    </select>    
 </mapper>

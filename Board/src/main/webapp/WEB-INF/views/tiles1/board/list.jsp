@@ -30,6 +30,13 @@
 			const $target = $(event.target);
 			$target.removeClass("subjectStyle");
 		});
+		
+		$("input#searchWord").keyup(function(event){
+			if(event.keyCode == 13) {
+				// 엔터를 했을 경우
+				goSearch();
+			}
+		});
 	
 	});// end of $(document).ready(function(){})---------------------------------------
 
@@ -40,6 +47,12 @@
 		
 	}// end of function goView(seq)---------------------------------------------
 	
+	function goSearch() {
+		const frm = document.searchFrm;
+		frm.method = "GET";
+		frm.action = "<%=ctxPath%>/list.action";
+		frm.submit();
+	}// end of function goSearch() {}----------------------------------------
 </script>
 
 <div style="display: flex;">
@@ -64,22 +77,32 @@
 					<td align="center">
 						${boardvo.seq}
 					</td>
-					<td>
-						<span class="subject" onclick="goView('${boardvo.seq}')">${boardvo.subject}</span>
+					<td align="left">
+						<c:if test="${boardvo.commentCount > 0}">
+							<span class="subject" onclick="goView('${boardvo.seq}')">${boardvo.subject} <span style="vertical-align: super;">[<span style="color: red; font-size: 9pt; font-style: italic; font-weight: bold;">${boardvo.commentCount}</span>]</span></span>
+						</c:if>
+						
+						<c:if test="${boardvo.commentCount == 0}">
+							<span class="subject" onclick="goView('${boardvo.seq}')">${boardvo.subject}</span>
+						</c:if>
 					</td>
-					<td align="center">
-						${boardvo.name}
-					</td>
-					<td align="center">
-						${boardvo.regDate}
-					</td>
-					<td align="center">
-						${boardvo.readCount}
-					</td>
+					<td align="center">${boardvo.name}</td>
+					<td align="center">${boardvo.regDate}</td>
+					<td align="center">${boardvo.readCount}</td>
 				</tr>
 			</c:forEach>
 		</tbody>
 	</table>
-
+	
+	<%-- === #101. 글검색 폼 추가하기 : 글제목, 글쓴이로 검색을 하도록 한다. === --%>
+	<form name="searchFrm" style="margin-top: 20px;">
+      <select name="searchType" id="searchType" style="height: 26px;">
+         <option value="subject">글제목</option>
+         <option value="name">글쓴이</option>
+      </select>
+      <input type="text" name="searchWord" id="searchWord" size="40" autocomplete="off" /> 
+      <input type="text" style="display: none;"/> <%-- form 태그내에 input 태그가 오로지 1개 뿐일경우에는 엔터를 했을 경우 검색이 되어지므로 이것을 방지하고자 만든것이다. type hidden 하지 않고 style none 해야한다.--%>  
+      <button type="button" class="btn btn-secondary btn-sm" onclick="goSearch()">검색</button>
+   </form>
 </div>
 </div>
