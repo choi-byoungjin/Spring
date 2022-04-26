@@ -193,5 +193,21 @@ public class BoardDAO implements InterBoardDAO {
 		List<BoardVO> boardList = sqlsession.selectList("board.boardListSearch", paraMap);
 		return boardList;
 	}
+
+	
+	// === #110. 검색어 입력시 자동글 완성하기 5 === //
+	@Override
+	public List<String> wordSearchShow(Map<String, String> paraMap) {
+		List<String> wordList = sqlsession.selectList("board.wordSearchShow", paraMap);
+		return wordList;
+	}
+
+	
+	// === #116. 총 게시물 건수(totalCount) 구하기 - 검색이 있을때와 검색이 없을때로 나뉜다. === //
+	@Override
+	public int getTotalCount(Map<String, String> paraMap) {
+		int n = sqlsession.selectOne("board.getTotalCount", paraMap);
+		return n;
+	}
 		
 }

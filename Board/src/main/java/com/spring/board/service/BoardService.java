@@ -241,4 +241,20 @@ public class BoardService implements InterBoardService {
 		return boardList;
 	}
 
+	
+	// === #109. 검색어 입력시 자동글 완성하기 3 === //
+	@Override
+	public List<String> wordSearchShow(Map<String, String> paraMap) {
+		List<String> wordList = dao.wordSearchShow(paraMap);
+		return wordList;
+	}
+
+
+	// === #115. 총 게시물 건수(totalCount) 구하기 - 검색이 있을때와 검색이 없을때로 나뉜다. === //
+	@Override
+	public int getTotalCount(Map<String, String> paraMap) {
+		int n = dao.getTotalCount(paraMap);
+		return n;
+	}
+
 }

@@ -315,3 +315,57 @@ where subject like '%'||'korea'||'%';
 select *
 from tbl_board
 where lower(subject) like '%'||lower('koReA')||'%';
+
+----------------------------------------------------------------------------------
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'choibj', '최병진', '즐거운 하루 되세요~~', '오늘도 늘 행복하게~~', '1234', default, default, default);
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'emojh', '엄정화', '오늘도 즐거운 수업을 합시다', '기분이 좋은 하루 되세요^^', '1234', default, default, default);
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'choibj', '최병진', '기분좋은 날 안녕하신가요?', '모두 반갑습니다', '1234', default, default, default);
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'choibj', '최병진', '모두들 즐거이 퇴근하세요 안녕~~', '건강이 최고 입니다.', '1234', default, default, default);
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'eomjh', '엄정화', 'java가 재미 있나요?', '궁금합니다. java가 뭔지요?', '1234', default, default, default);
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'leess', '이순신', '프로그램은 JAVA 가 쉬운가요?', 'java에 대해 궁금합니다', '1234', default, default, default);
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'choibj', '최병진', 'JSP 가 뭔가요?', '웹페이지를 작성하려고 합니다.', '1234', default, default, default);
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'eomjh', '엄정화', 'Korea VS Japan 라이벌 축구대결', '많은 시청 바랍니다.', '1234', default, default, default);
+
+insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status)
+values(boardSeq.nextval, 'leess', '이순신', '날씨가 많이 쌀쌀합니다.', '건강에 유의하세요~~', '1234', default, default, default);
+
+commit;
+
+select *
+from tbl_board
+order by seq desc;
+
+select distinct name
+from tbl_board
+where status = 1
+and lower(name) like '%'||lower('정')||'%'
+order by name desc    	
+
+
+select subject
+from tbl_board
+where status = 1
+and lower(subject) like '%'||lower('JA')||'%'
+order by seq desc
+
+
+select count(*)
+from tbl_board
+where status = 1
+and lower(subject) like '%'||'j'||'%'

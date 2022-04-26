@@ -51,5 +51,11 @@ public interface InterBoardService {
 
 	// == 페이징 처리를 안한 검색어가 있는 전체 글목록 보여주기 == //
 	List<BoardVO> boardListSearch(Map<String, String> paraMap);
+
+	// 검색어 입력시 자동글 완성하기
+	List<String> wordSearchShow(Map<String, String> paraMap);
+
+	// 총 게시물 건수(totalCount) 구하기 - 검색이 있을때와 검색이 없을때로 나뉜다.
+	int getTotalCount(Map<String, String> paraMap);
 	
 }

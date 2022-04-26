@@ -208,4 +208,45 @@
 		</if>
 		order by seq desc
     </select>    
+    
+    
+    <!-- === #111. 검색어 입력시 자동글 완성하기 6 === -->
+    <select id="wordSearchShow" parameterType="HashMap" resultType="String">    	
+    	<choose>
+    		<when test="searchType eq 'name'">
+	    		select distinct ${searchType}
+	    	</when>
+	    	<otherwise>
+	    		select ${searchType}
+	    	</otherwise>	    	
+    	</choose>
+    	from tbl_board
+    	where status = 1
+    	and lower(${searchType}) like '%'||lower(#{searchWord})||'%'
+    	<!-- select 문에서 distinct 와 order by 절을 함께 사용할때는 조심해야 한다.
+			 order by 절에는 select 문에서 사용된 컬럼만 들어올 수가 있다.
+			  또는 order by 절을 사용하지 않아야 한다.
+		 -->
+		<choose>
+    		<when test="searchType neq 'subject'">
+	    		order by ${searchType}
+	    	</when>
+	    	<otherwise>
+	    		order by seq desc
+	    	</otherwise>	    	
+    	</choose>
+    	    	
+    </select>
+    
+    
+    <!-- === #117. 총 게시물 건수(totalCount) 구하기 - 검색이 있을때와 검색이 없을때로 나뉜다. === -->
+    <select id="getTotalCount" parameterType="HashMap" resultType="int">
+    	select count(*)
+		from tbl_board
+		where status = 1
+		<if test='searchType != ""'>
+		and lower(${searchType}) like '%'|| lower(#{searchWord}) ||'%'
+		</if>
+    </select>
+    
 </mapper>

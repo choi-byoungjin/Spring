@@ -608,7 +608,7 @@ public class BoardController {
 		// == 페이징 처리를 안한 검색어가 없는 전체 글목록 보여주기 == //
 	//	boardList = service.boardListNoSearch();
 		
-		
+	/*
 		// == #102. 페이징 처리를 안한 검색어가 있는 전체 글목록 보여주기 == //
 		String searchType = request.getParameter("searchType");
 		String searchWord = request.getParameter("searchWord");
@@ -630,7 +630,101 @@ public class BoardController {
 		
 		///////////////////////////////////////////////////////////////////////
 		
-		mav.addObject("boardList", boardList);		
+		// 아래는 검색대상 컬럼과 검색어를 유지시키기 위한 것이다.
+		if(!"".equals(searchType) && !"".equals(searchWord)) {
+			mav.addObject("paraMap", paraMap);
+		}
+	*/	
+		///////////////////////////////////////////////////////////////////////
+		
+		
+		// == #114. 페이징 처리를 한 검색어가 있는 전체 글목록 보여주기 == //
+		/* 	
+		  	페이징 처리를 통한 글목록 보여주기는 
+			예를 들어 3페이지의 내용을 보고자 한다라면 검색을 할 경우는 아래와 같이
+     		list.action?searchType=subject&searchWord=안녕&currentShowPageNo=3 와 같이 해주어야 한다.
+        	또는 
+        	검색이 없는 전체를 볼때는 아래와 같이 
+     		list.action 또는 
+     		list.action?searchType=&searchWord=&currentShowPageNo=3 또는 
+     		list.action?searchType=subject&searchWord=&currentShowPageNo=3 와 같이 해주어야 한다.
+		 */
+		
+		String searchType = request.getParameter("searchType");
+		String searchWord = request.getParameter("searchWord");
+		String str_currentShowPageNo = request.getParameter("currentShowPageNo");
+				
+		if(searchType == null || (!"subject".equals(searchType) && !"name".equals(searchType))) {
+			searchType = "";
+		}
+		
+		if(searchWord == null || "".equals(searchWord) || searchWord.trim().isEmpty()) {
+			searchWord = "";
+		}
+		
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("searchType", searchType);
+		paraMap.put("searchWord", searchWord);
+		
+		// 먼저 총 게시물 건수(totalCount)를 구해와야 한다.
+		// 총 게시물 건수(totalCount)는 검색조건이 있을때와 없을때로 나뉘어진다.
+		int totalCount = 0; 		// 총 게시물 건수
+		int sizePerPage = 10; 		// 한 페이지당 보여줄 게시물 건수
+		int currentShowPageNo = 0; 	// 현재 보여주는 페이지번호로서, 초기치로는 1페이지로 설정함.
+		int totalPage = 0;			// 총 페이지수(웹브라우저상에서 보여줄 총 페이지 개수, 페이지바)
+		
+		int startRno = 0; 	// 시작 행번호
+		int endRno = 0; 	// 끝 행번호
+		
+		// 총 게시물 건수(totalCount)
+		totalCount = service.getTotalCount(paraMap);
+	//	System.out.println("~~~~~ 확인용 totalCount : " + totalCount);
+		
+		// 만약에 총 게시물 건수(totalCount)가 127개 이라면
+		// 총 페이지수(totalPage)는 13개가 되어야 한다.
+		
+		totalPage = (int) Math.ceil((double)totalCount/sizePerPage);
+		// (double)127/10 ==> 12.7 ==> Math.ceil(12.7) ==> 13.0 ==> (int)13.0 ==> 13
+		// (double)120/10 ==> 12.0 ==> Math.ceil(12.0) ==> 12.0 ==> (int)12.0 ==> 12
+		
+		if(str_currentShowPageNo == null) {
+			// 게시판에 보여지는 초기화면
+			currentShowPageNo = 1;
+		}
+		else {
+			try {
+				currentShowPageNo = Integer.parseInt(str_currentShowPageNo);
+				if( currentShowPageNo < 1 || currentShowPageNo > totalPage) {
+					currentShowPageNo = 1;
+				}
+			} catch(NumberFormatException e) {
+				currentShowPageNo = 1;
+			}			
+		}
+		// **** 가져올 게시글의 범위를 구한다.(공식임!!!) **** 
+		/*
+			currentShowPageNo      startRno     endRno
+			--------------------------------------------
+			1 page        ===>    1           10
+			2 page        ===>    11          20
+			3 page        ===>    21          30
+			4 page        ===>    31          40
+			......                ...         ...
+		 */
+		
+		내일 이어서 합니다.
+		
+		// ~~~~~~~~~~~~
+		
+	//	boardList = service.boardListSearchWithPaging(paraMap);
+		// 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것)
+		
+		// 아래는 검색대상 컬럼과 검색어를 유지시키기 위한 것이다.
+		if(!"".equals(searchType) && !"".equals(searchWord)) {
+			mav.addObject("paraMap", paraMap);
+		}
+		
+		mav.addObject("boardList", boardList);
 		mav.setViewName("board/list.tiles1");
 		// /WEB-INF/views/tiles1/board/list.jsp 파일을 생성한다.
 		
@@ -900,6 +994,33 @@ public class BoardController {
 		return jsonArr.toString();
 	}
 	
+	// === #108. 검색어 입력시 자동글 완성하기 3 === //
+	@ResponseBody
+	@RequestMapping(value="/wordSearchShow.action", method= {RequestMethod.GET}, produces="text/plain;charset=UTF-8")
+	public String wordSearchShow(HttpServletRequest request) {
+		
+		String searchType = request.getParameter("searchType");	// 컬럼명
+		String searchWord = request.getParameter("searchWord");	// 검색어
+		
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("searchType", searchType);
+		paraMap.put("searchWord", searchWord);
+		
+		List<String> wordList = service.wordSearchShow(paraMap);
+		
+		JSONArray jsonArr = new JSONArray(); // []
+		
+		if(wordList != null) {
+			for(String word : wordList) {
+				JSONObject jsonObj = new JSONObject();
+				jsonObj.put("word", word);
+				
+				jsonArr.put(jsonObj);				
+			}// end of for ---------------------------------------
+		}
+		
+		return jsonArr.toString();
+	}
 	
 	////////////////////////////////////////////////////////////////////////////////////
 	
