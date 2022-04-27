@@ -638,7 +638,7 @@ public class BoardController {
 		///////////////////////////////////////////////////////////////////////
 		
 		
-		// == #114. 페이징 처리를 한 검색어가 있는 전체 글목록 보여주기 == //
+		// == #114. 페이징 처리를 한 검색어가 있는 전체 글목록 보여주기 시작 == //
 		/* 	
 		  	페이징 처리를 통한 글목록 보여주기는 
 			예를 들어 3페이지의 내용을 보고자 한다라면 검색을 할 경우는 아래와 같이
@@ -669,7 +669,7 @@ public class BoardController {
 		// 먼저 총 게시물 건수(totalCount)를 구해와야 한다.
 		// 총 게시물 건수(totalCount)는 검색조건이 있을때와 없을때로 나뉘어진다.
 		int totalCount = 0; 		// 총 게시물 건수
-		int sizePerPage = 10; 		// 한 페이지당 보여줄 게시물 건수
+		int sizePerPage = 3; 		// 한 페이지당 보여줄 게시물 건수
 		int currentShowPageNo = 0; 	// 현재 보여주는 페이지번호로서, 초기치로는 1페이지로 설정함.
 		int totalPage = 0;			// 총 페이지수(웹브라우저상에서 보여줄 총 페이지 개수, 페이지바)
 		
@@ -712,17 +712,129 @@ public class BoardController {
 			......                ...         ...
 		 */
 		
-		내일 이어서 합니다.
+		startRno = ((currentShowPageNo - 1) * sizePerPage) + 1;
+		endRno = startRno + sizePerPage - 1;
+		
+		paraMap.put("startRno", String.valueOf(startRno));
+		paraMap.put("endRno", String.valueOf(endRno));
 		
 		// ~~~~~~~~~~~~
 		
-	//	boardList = service.boardListSearchWithPaging(paraMap);
+		boardList = service.boardListSearchWithPaging(paraMap);
 		// 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것)
 		
 		// 아래는 검색대상 컬럼과 검색어를 유지시키기 위한 것이다.
 		if(!"".equals(searchType) && !"".equals(searchWord)) {
 			mav.addObject("paraMap", paraMap);
 		}
+		
+		
+		// === #121. 페이지바 만들기 === //
+		int blockSize = 2;
+		// blockSize 는 1개 블럭(토막)당 보여지는 페이지번호의 개수이다.
+		/*
+		        		  1  2  3  4  5  6  7  8  9 10 [다음][마지막]  -- 1개블럭
+			[맨처음][이전]  11 12 13 14 15 16 17 18 19 20 [다음][마지막]  -- 1개블럭
+			[맨처음][이전]  21 22 23
+		*/
+		
+		int loop = 1;
+		/*
+	        loop는 1부터 증가하여 1개 블럭을 이루는 페이지번호의 개수[ 지금은 10개(== blockSize) ] 까지만 증가하는 용도이다.
+	     */
+		
+		int pageNo = ((currentShowPageNo - 1)/blockSize) * blockSize + 1;
+	      // *** !! 공식이다. !! *** //
+	      
+	   /*
+	       1  2  3  4  5  6  7  8  9  10  -- 첫번째 블럭의 페이지번호 시작값(pageNo)은 1 이다.
+	       11 12 13 14 15 16 17 18 19 20  -- 두번째 블럭의 페이지번호 시작값(pageNo)은 11 이다.
+	       21 22 23 24 25 26 27 28 29 30  -- 세번째 블럭의 페이지번호 시작값(pageNo)은 21 이다.
+	       
+	       currentShowPageNo         pageNo
+	      ----------------------------------
+	            1                      1 = ((1 - 1)/10) * 10 + 1
+	            2                      1 = ((2 - 1)/10) * 10 + 1
+	            3                      1 = ((3 - 1)/10) * 10 + 1
+	            4                      1
+	            5                      1
+	            6                      1
+	            7                      1 
+	            8                      1
+	            9                      1
+	            10                     1 = ((10 - 1)/10) * 10 + 1
+	           
+	            11                    11 = ((11 - 1)/10) * 10 + 1
+	            12                    11 = ((12 - 1)/10) * 10 + 1
+	            13                    11 = ((13 - 1)/10) * 10 + 1
+	            14                    11
+	            15                    11
+	            16                    11
+	            17                    11
+	            18                    11 
+	            19                    11 
+	            20                    11 = ((20 - 1)/10) * 10 + 1
+	            
+	            21                    21 = ((21 - 1)/10) * 10 + 1
+	            22                    21 = ((22 - 1)/10) * 10 + 1
+	            23                    21 = ((23 - 1)/10) * 10 + 1
+	            ..                    ..
+	            29                    21
+	            30                    21 = ((30 - 1)/10) * 10 + 1
+	   */
+		
+		
+		String pageBar = "<ul style='list-style: none;'>";
+		String url = "list.action";
+		
+		// === [맨처음][이전]만들기 === //
+		if(pageNo != 1) {
+			pageBar += "<li style='display:inline-block; width:70px; font-size:12pt;'><a href='"+url+"?searchType="+searchType+"&searchWord="+searchWord+"&currentShowPageNo=1'>[맨처음]</a></li>";
+			pageBar += "<li style='display:inline-block; width:50px; font-size:12pt;'><a href='"+url+"?searchType="+searchType+"&searchWord="+searchWord+"&currentShowPageNo="+(pageNo-1)+"'>[이전]</a></li>";
+		}
+		
+		while( !(loop > blockSize || pageNo > totalPage) ) {
+			if(pageNo == currentShowPageNo) {
+				pageBar += "<li style='display:inline-block; width:30px; font-size:12pt; border:solid 1px gray; color:red; padding:2px 4px;'>"+pageNo+"</a></li>";
+			}
+			else {
+				pageBar += "<li style='display:inline-block; width:30px; font-size:12pt;'><a href='"+url+"?searchType="+searchType+"&searchWord="+searchWord+"&currentShowPageNo="+pageNo+"'>"+pageNo+"</a></li>";
+			}
+			
+			loop++;
+			pageNo++;
+			
+		}// end of while--------------------------------------------------
+		
+		
+		// === [다음][맨마지막]만들기 === //
+		if(pageNo <= totalPage) {
+			pageBar += "<li style='display:inline-block; width:50px; font-size:12pt;'><a href='"+url+"?searchType="+searchType+"&searchWord="+searchWord+"&currentShowPageNo="+pageNo+"'>[다음]</a></li>";
+			pageBar += "<li style='display:inline-block; width:70px; font-size:12pt;'><a href='"+url+"?searchType="+searchType+"&searchWord="+searchWord+"&currentShowPageNo="+totalPage+"'>[마지막]</a></li>";
+		}
+				
+		pageBar += "</ul>";
+		
+		mav.addObject("pageBar", pageBar);
+		
+		
+		// === #123. 페이징 처리되어진 후 특정 글제목을 클릭하여 상세내용을 본 이후
+		//           사용자가 목록보기 버튼을 클릭했을때 돌아갈 페이지를 알려주기 위해
+		//           현재 페이지 주소를 뷰단으로 넘겨준다.
+		String gobackURL = MyUtil.getCurrentURL(request);
+	//	System.out.println("~~~~~ 확인용 gobackURL : " + gobackURL);
+		/*
+			~~~~~ 확인용 gobackURL : /list.action
+			~~~~~ 확인용 gobackURL : /list.action?searchType=&searchWord=&currentShowPageNo=2
+			~~~~~ 확인용 gobackURL : /list.action?searchType=subject&searchWord=j
+			~~~~~ 확인용 gobackURL : /list.action?searchType=subject&searchWord=j&currentShowPageNo=2
+		 */		
+		mav.addObject("gobackURL", gobackURL.replaceAll("&", " "));
+
+		// == 페이징 처리를 한 검색어가 있는 전체 글목록 보여주기 끝 == //
+		////////////////////////////////////////////////////////////////////
+		
+		
 		
 		mav.addObject("boardList", boardList);
 		mav.setViewName("board/list.tiles1");
@@ -741,14 +853,56 @@ public class BoardController {
 		// 조회하고자 하는 글번호 받아오기
 		String seq = request.getParameter("seq");
 		
+		// 글목록에서 검색되어진 글내용일 경우 이전글제목, 다음글제목은 검색되어진 결과물내의 이전글과 다음글이 나오도록 하기 위한 것이다.
+		String searchType = request.getParameter("searchType");
+		String searchWord = request.getParameter("searchWord");
+		
+		if(searchType == null) {
+			searchType = "";
+		}
+
+		if(searchWord == null) {
+			searchWord = "";
+		}
+		
+		// === #125. 페이징 처리되어진 후 특정 글제목을 클릭하여 상세내용을 본 이후
+		//           사용자가 목록보기 버튼을 클릭했을때 돌아갈 페이지를 알려주기 위해
+		//           현재 페이지 주소를 뷰단으로 넘겨준다.
+		String gobackURL = request.getParameter("gobackURL");
+	//	System.out.println("~~~ 확인용 : gobackURL" + gobackURL);
+		// ~~~ 확인용 : gobackURL/list.action						전체글 1페이지		수정후 : ~~~ 확인용 : gobackURL/list.action
+		// ~~~ 확인용 : gobackURL/list.action?searchType=			전체글 2페이지		수정후 : ~~~ 확인용 : gobackURL/list.action?searchType= searchWord= currentShowPageNo=2
+		// ~~~ 확인용 : gobackURL/list.action?searchType=subject	검색조건j 1페이지	수정후 : ~~~ 확인용 : gobackURL/list.action?searchType=subject searchWord=j
+		// ~~~ 확인용 : gobackURL/list.action?searchType=subject	검색조건j 2페이지	수정후 : ~~~ 확인용 : gobackURL/list.action?searchType=subject searchWord=j currentShowPageNo=2
+		// getParameter의 구분자가 &여서 list에서 넘어온 주소가 잘린다. => 832줄
+		
+		if( gobackURL != null && gobackURL.contains(" ")) {
+			gobackURL = gobackURL.replaceAll(" ", "&");
+		}
+	//	System.out.println("~~~ 확인용 : gobackURL" + gobackURL);
+		// ~~~ 확인용 : gobackURL/list.action
+		// ~~~ 확인용 : gobackURL/list.action?searchType=&searchWord=&currentShowPageNo=2
+		// ~~~ 확인용 : gobackURL/list.action?searchType=subject&searchWord=j
+		// ~~~ 확인용 : gobackURL/list.action?searchType=subject&searchWord=j&currentShowPageNo=2
+		
+		mav.addObject("gobackURL", gobackURL);
+		
+		// === #125 작업의 끝 === //
+		//////////////////////////////////////////////////////////////////////////////////////////
+		
 		// 이전글제목, 다음글제목 클릭했을 때 readCountPermission 받아오기
-		String readCountPermission = request.getParameter("readCountPermission");
+		// String readCountPermission = request.getParameter("readCountPermission");
 		
 		try {
 			Integer.parseInt(seq);
 			
 			Map<String, String> paraMap = new HashMap<>();
 			paraMap.put("seq", seq);
+			
+			paraMap.put("searchType", searchType);
+			paraMap.put("searchWord", searchWord);
+			
+			mav.addObject("paraMap", paraMap); // view.jsp 에서 이전글제목 및 다음글제목 클릭시 사용하기 위해서임.
 			
 			HttpSession session = request.getSession();
 			MemberVO loginuser = (MemberVO) session.getAttribute("loginuser");
@@ -936,10 +1090,14 @@ public class BoardController {
 		// 조회하고자 하는 글번호 받아오기
 		String seq = request.getParameter("seq");
 		
+		String searchType = request.getParameter("searchType");
+		String searchWord = request.getParameter("searchWord");
+		String gobackURL = request.getParameter("gobackURL");
+		
 		HttpSession session = request.getSession();
 		session.setAttribute("readCountPermission", "yes");
 		
-		mav.setViewName("redirect:/view.action?seq="+seq);
+		mav.setViewName("redirect:/view.action?seq="+seq+"&searchType="+searchType+"&searchWord="+searchWord+"&gobackURL="+gobackURL);
 		
 		return mav;
 	}

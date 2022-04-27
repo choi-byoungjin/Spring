@@ -369,3 +369,43 @@ select count(*)
 from tbl_board
 where status = 1
 and lower(subject) like '%'||'j'||'%'
+
+
+select count(*)
+from tbl_board
+where status = 1
+and lower(subject) like '%'||lower('')||'%'
+order by seq desc;
+
+
+select seq, fk_userid, name, subject, readCount, regDate, commentCount
+from
+(
+select row_number() over(order by seq desc) AS rno,
+        seq, fk_userid, name, subject, readCount, 
+        to_char(regDate,'yyyy-mm-dd hh24:mi:ss') as regDate, 
+        commentCount
+from tbl_board
+where status = 1
+and lower(subject) like '%'||lower('J')||'%'
+) V
+where rno between 1 and 3
+
+
+select previousseq, previoussubject
+     , seq, fk_userid, name, subject, content, readCount, regDate, pw
+     , nextseq, nextsubject
+from
+(
+    select lag(seq,1) over(order by seq desc) AS previousseq
+         , lag(subject,1) over(order by seq desc) AS previoussubject       
+         , seq, fk_userid, name, subject, content, readCount 
+         , to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate     
+         , pw
+         , lead(seq,1) over(order by seq desc) AS nextseq
+         , lead(subject,1) over(order by seq desc)  AS nextsubject
+    from tbl_board
+    where status = 1
+    and lower(subject) like '%'|| lower('Ja') ||'%'
+) V
+where V.seq = 11

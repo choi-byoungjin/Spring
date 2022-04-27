@@ -14,6 +14,8 @@
 	.subjectStyle {font-weight:bold;
 					color: navy;
 					cursor: pointer;}
+	
+	a {text-decoration: none !important;}
 
 </style>
 
@@ -133,8 +135,28 @@
 
 	// Function Declaration
 	function goView(seq) {
-		
+		<%--
 		location.href = "<%=ctxPath%>/view.action?seq="+seq;
+		--%>
+		
+		// === #124. 페이징 처리되어진 후 특정 글제목을 클릭하여 상세내용을 본 이후
+		//			  사용자가 목록보기 버튼을 클릭했을 때 돌아갈 페이지를 알려주기 위해 
+		//			  현재 페이지 주소를 뷰단으로 넘겨준다.
+		
+		const gobackURL = "${requestScope.gobackURL}";
+		
+	//	alert(gobackURL);
+		/*
+			/list.action														전체글 1페이지
+			/list.action?searchType= searchWord= currentShowPageNo=2			전체글 2페이지
+			/list.action?searchType=subject searchWord=j						검색조건j 1페이지
+			/list.action?searchType=subject searchWord=j currentShowPageNo=2	검색조건j 2페이지
+		*/
+		
+		const searchType = $("select#searchType").val();
+		const searchWord = $("input#searchWord").val();
+		
+		location.href = "<%=ctxPath%>/view.action?seq="+seq+"&gobackURL="+gobackURL+"&searchType="+searchType+"&searchWord="+searchWord;
 		
 	}// end of function goView(seq)---------------------------------------------
 	
@@ -184,6 +206,11 @@
 			</c:forEach>
 		</tbody>
 	</table>
+	
+	<%-- === #121. 페이지바 만들기 === --%>
+	<div align="center" style="border: solid 0px gray; width: 70%; margin: 20px auto;">
+		${requestScope.pageBar}
+	</div>
 	
 	<%-- === #101. 글검색 폼 추가하기 : 글제목, 글쓴이로 검색을 하도록 한다. === --%>
 	<form name="searchFrm" style="margin-top: 20px;">

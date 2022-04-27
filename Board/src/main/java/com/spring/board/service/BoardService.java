@@ -257,4 +257,11 @@ public class BoardService implements InterBoardService {
 		return n;
 	}
 
+	// === #118. 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것) === //
+	@Override
+	public List<BoardVO> boardListSearchWithPaging(Map<String, String> paraMap) {
+		List<BoardVO> boardList = dao.boardListSearchWithPaging(paraMap);
+		return boardList;
+	}
+
 }

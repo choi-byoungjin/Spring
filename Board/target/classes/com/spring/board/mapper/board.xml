@@ -124,6 +124,9 @@
 		     , lead(subject,1) over(order by seq desc)  AS nextsubject
 		from tbl_board
 		where status = 1
+		<if test='searchType != "" and searchWord != ""'>
+		and lower(${searchType}) like '%'|| lower(#{searchWord}) ||'%'
+		</if>
 		) V
 		where V.seq = #{seq}
 	</select>
@@ -249,4 +252,22 @@
 		</if>
     </select>
     
+    
+    <!-- === #119. 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것) === -->
+    <select id="boardListSearchWithPaging" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
+    	select seq, fk_userid, name, subject, readCount, regDate, commentCount
+		from
+		(
+		select row_number() over(order by seq desc) AS rno,
+		        seq, fk_userid, name, subject, readCount, 
+		        to_char(regDate,'yyyy-mm-dd hh24:mi:ss') as regDate, 
+		        commentCount
+		from tbl_board
+		where status = 1
+		<if test='searchType != "" and searchWord != ""'>
+		and lower(${searchType}) like '%'||lower(#{searchWord})||'%'
+		</if>
+		) V
+		where rno between #{startRno} and #{endRno}
+    </select>
 </mapper>

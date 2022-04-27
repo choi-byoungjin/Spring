@@ -209,5 +209,13 @@ public class BoardDAO implements InterBoardDAO {
 		int n = sqlsession.selectOne("board.getTotalCount", paraMap);
 		return n;
 	}
+
+	
+	// === #119. 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것) === //
+	@Override
+	public List<BoardVO> boardListSearchWithPaging(Map<String, String> paraMap) {
+		List<BoardVO> boardList = sqlsession.selectList("board.boardListSearchWithPaging", paraMap);
+		return boardList;
+	}
 		
 }

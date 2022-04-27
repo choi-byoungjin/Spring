@@ -27,7 +27,7 @@
 							function(){
 								$(this).removeClass("moveColor");	
 							});
-		
+	//	alert("${requestScope.gobackURL}");
 	});// end of $(document).ready(function(){})----------------------------------------------------
 
 	// Function Declaration
@@ -166,14 +166,21 @@
 		</table>
 		<br/>
 		
-		<div style="margin-bottom: 1%;">이전글제목&nbsp;&nbsp;<span class="move" onclick="javascript:location.href='view_2.action?seq=${requestScope.boardvo.previousseq}&readCountPermission=yes'">${requestScope.boardvo.previoussubject}</span></div>
-		<div style="margin-bottom: 1%;">다음글제목&nbsp;&nbsp;<span class="move" onclick="javascript:location.href='view_2.action?seq=${requestScope.boardvo.nextseq}&readCountPermission=yes'">${requestScope.boardvo.nextsubject}</span></div>
+		<c:set var="v_gobackURL" value='${ fn:replace(requestScope.gobackURL, "&", " ")}' />
+		
+		<div style="margin-bottom: 1%;">이전글제목&nbsp;&nbsp;<span class="move" onclick="javascript:location.href='view_2.action?seq=${requestScope.boardvo.previousseq}&searchType=${requestScope.paraMap.searchType}&searchWord=${requestScope.paraMap.searchWord}&gobackURL=${v_gobackURL}'">${requestScope.boardvo.previoussubject}</span></div>
+		<div style="margin-bottom: 1%;">다음글제목&nbsp;&nbsp;<span class="move" onclick="javascript:location.href='view_2.action?seq=${requestScope.boardvo.nextseq}&searchType=${requestScope.paraMap.searchType}&searchWord=${requestScope.paraMap.searchWord}&gobackURL=${v_gobackURL}'">${requestScope.boardvo.nextsubject}</span></div>
 		<br/>
 		
 		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/list.action'">전체목록보기</button>
+
+		<%-- === #126. 페이징 처리되어진 후 특정 글제목을 클릭하여 상세내용을 본 이후
+					      사용자가 목록보기 버튼을 클릭했을 때 돌아갈 페이지를 알려주기 위해 
+					      현재 페이지 주소를 뷰단으로 넘겨준다. --%>
+		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>${requestScope.gobackURL}'">검색된결과목록보기</button>
 		
 		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/edit.action?seq=${requestScope.boardvo.seq}'">글수정하기</button>
-		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/del.action?seq=${requestScope.boardvo.seq}'">글삭제하기</button>
+		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/del.action?seq=${requestScope.boardvo.seq}'">글삭제하기</button>		
 		
 		<%-- === #83. 댓글쓰기 폼 추가 === --%>
 		<c:if test="${not empty sessionScope.loginuser}">
