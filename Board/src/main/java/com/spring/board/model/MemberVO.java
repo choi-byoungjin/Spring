@@ -34,6 +34,10 @@ public class MemberVO {
 	
     /////////////////////////////////////////////////////////////////////
 	
+	// #138. 먼저 답변글쓰기는 일반회원은 불가하고 직원(관리파트)들만 답변글쓰기가 가능하도록 하기 위해서 
+	//       먼저 오라클에서 tbl_member 테이블에  gradelevel 이라는 컬럼을 추가해야 한다.
+	private int gradelevel;            // 등급레벨 
+	
 	public MemberVO() {}
 	
 	public MemberVO(String userid, String pwd, String name, String email, String mobile,
@@ -228,6 +232,14 @@ public class MemberVO {
 		this.lastlogingap = lastlogingap;
 	}
 	
+	public int getGradelevel() {
+		return gradelevel;
+	}
+
+	public void setGradelevel(int gradelevel) {
+		this.gradelevel = gradelevel;
+	}
+
 	public int getAge() {
 		
 		int age = 0;
