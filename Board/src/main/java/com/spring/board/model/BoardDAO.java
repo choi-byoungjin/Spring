@@ -233,5 +233,13 @@ public class BoardDAO implements InterBoardDAO {
 		int totalPage = sqlsession.selectOne("board.getCommentTotalPage", paraMap);
 		return totalPage;
 	}
+
+	
+	// === #145. tbl_board 테이블에서 groupno 컬럼의 최대값 알아오기 === //
+	@Override
+	public int getGroupnoMax() {
+		int maxgroupno = sqlsession.selectOne("board.getGroupnoMax");
+		return maxgroupno;
+	}
 		
 }

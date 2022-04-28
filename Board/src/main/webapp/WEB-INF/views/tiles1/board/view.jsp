@@ -377,7 +377,7 @@
 				<span>groupno : ${requestScope.boardvo.groupno}</span>			
 				<span>depthno : ${requestScope.boardvo.depthno}</span>
 			--%>				
-			<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/add.action'">답변글쓰기</button>
+			<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/add.action?fk_seq=${requestScope.boardvo.seq}&groupno=${requestScope.boardvo.groupno}&depthno=${requestScope.boardvo.depthno}&subject=${requestScope.boardvo.subject}'">답변글쓰기</button>
 		</c:if>
 		
 		<%-- === #83. 댓글쓰기 폼 추가 === --%>
@@ -387,7 +387,7 @@
 			<form name="addWriteFrm" id="addWriteFrm" style="margin-top: 20px;">
 				<table class="table" style="width: 1024px">
 					<tr style="height: 30px;">
-						<th width=                                                                                                                                                                          "10%" >성명</th>
+						<th width="10%" >성명</th>
 						<td>
 	                  		<input type="hidden" name="fk_userid" id="fk_userid" value="${sessionScope.loginuser.userid}" />
 	                  		<input type="text" name="name" id="name" value="${sessionScope.loginuser.name}" readonly />

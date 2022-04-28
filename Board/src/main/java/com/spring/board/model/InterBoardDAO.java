@@ -71,4 +71,7 @@ public interface InterBoardDAO {
 
 	// 원글번호(parentSeq) 에 해당하는 댓글의 totalPage 수 알아오기
 	int getCommentTotalPage(Map<String, String> paraMap);
+
+	// tbl_board 테이블에서 groupno 컬럼의 최대값 알아오기
+	int getGroupnoMax();
 }

@@ -117,10 +117,22 @@ public class BoardService implements InterBoardService {
 	@Override
 	public int add(BoardVO boardvo) {
 
+		// === #144.글쓰기가 원글쓰기인지 아니면 답변글쓰기인지를 구분하여 
+		//          tbl_board 테이블에 insert 를 해주어야 한다.
+		//          원글쓰기 이라면 tbl_board 테이블의 groupno 컬럼의 값은 
+		//          groupno 컬럼의 최대값(max)+1 로 해서 insert 해야하고,
+		//          답변글쓰기 이라면 넘겨받은 값(boardvo)을 그대로 insert 해주어야 한다.
 		
+		// === 원글쓰기인지, 답변글쓰기인지 구분하기 시작 === //
+		if( "".equals(boardvo.getFk_seq())) {
+			// 원글쓰기인 경우
+			// groupno 컬럼의 값은 groupno 컬럼의 최대값(max)+1 로 해야 한다.
+			int groupno = dao.getGroupnoMax() + 1;
+			boardvo.setGroupno(String.valueOf(groupno));
+		}
+		// === 원글쓰기인지, 답변글쓰기인지 구분하기 끝 === //
 		
 		int n = dao.add(boardvo);
-		
 		return n;
 	}
 

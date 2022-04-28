@@ -543,6 +543,22 @@ public class BoardController {
 		
 	//	getCurrentURL(request); // 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 호출 // 반드시 로그인 해야 들어갈 수 있기때문에 주석처리
 		
+		// === #142.답변글쓰기 추가된 경우 시작 === //
+		String fk_seq = request.getParameter("fk_seq");
+		String groupno = request.getParameter("groupno");
+		String depthno = request.getParameter("depthno");
+		String subject = "[답변] "+request.getParameter("subject");		
+		
+		if(fk_seq == null) {
+			fk_seq = "";
+		}
+		
+		mav.addObject("fk_seq", fk_seq);
+		mav.addObject("groupno", groupno);
+		mav.addObject("depthno", depthno);
+		mav.addObject("subject", subject);		
+		// === 답변글쓰기 추가된 경우 끝 ===
+		
 		mav.setViewName("board/add.tiles1");
 		// /WEB-INF/views/tiles1/board/add.jsp 파일을 생성한다.
 		
@@ -553,7 +569,7 @@ public class BoardController {
 	// === #54. 게시판 글쓰기 완료 요청=== //
 	@RequestMapping(value="/addEnd.action", method= {RequestMethod.POST})
 //	public ModelAndView addEnd(ModelAndView mav, BoardVO boardvo) {		<== After Advice 를 사용하기 전
-	public ModelAndView pointPlus_addEnd(Map<String,String> paraMap, ModelAndView mav, BoardVO boardvo) {	//	<== After Advice 를 사용하기
+	public ModelAndView addEnd(Map<String,String> paraMap, ModelAndView mav, BoardVO boardvo) {	//	<== After Advice 를 사용하기
 	/*
        form 태그의 name 명과  BoardVO 의 필드명이 같다라면 
        request.getParameter("form 태그의 name명"); 을 사용하지 않더라도
