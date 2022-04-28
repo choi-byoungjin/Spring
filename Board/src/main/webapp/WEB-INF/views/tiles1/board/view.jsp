@@ -11,16 +11,16 @@
 	span.move {cursor: pointer; color: navy;}
 	.moveColor {color: #660029; font-weight: bold; background-color: #ffffe6;}
 	td.comment {text-align: center;}
-
+	a{text-decoration: none !important;}
 </style>
 
 <script type="text/javascript">
 
 	$(document).ready(function(){
 		
-		goReadComment(); // 페이징 처리 안한 댓글 읽어오기
-	//	goViewComment(1); // 페이징 처리한 댓글 읽어오기
-		
+	//	goReadComment(); // 페이징 처리 안한 댓글 읽어오기
+		goViewComment(1); // 페이징 처리한 댓글 읽어오기 // 1페이지를 보여주는 것
+	
 		$("span.move").hover(function(){
 								$(this).addClass("moveColor"); // this는 화살표함수 불가능 function 필요
 							}, 
@@ -73,8 +73,8 @@
 					alert(json.name + "님의 포인트는 300점을 초과할 수 없으므로 댓글쓰기가 불가합니다.");
 				}
 				else {
-					goReadComment(); // 페이징 처리 안한 댓글 읽어오기
-				//	goViewComment(1); // 페이징 처리한 댓글 읽어오기
+				//	goReadComment(); // 페이징 처리 안한 댓글 읽어오기
+					goViewComment(1); // 페이징 처리한 댓글 읽어오기
 				}
 				
 				$("input#commentContent").val("");
@@ -121,6 +121,195 @@
 		});
 		
 	}// end of function goReadComment() {}-------------------------------------------------
+	
+	
+	// === #127. Ajax로 불러온 댓글내용을 페이징 처리 하기 == //
+	function goViewComment(currentShowPageNo) {
+		
+		$.ajax({
+			url:"<%=request.getContextPath()%>/commentList.action",
+			data:{"parentSeq":"${requestScope.boardvo.seq}",
+				  "currentShowPageNo":currentShowPageNo},
+			dataType:"JSON",
+			success:function(json){
+				// [{"name":"최병진","regDate":"2022-04-27 15:02:51","content":"열세번째 댓글 입니다."},{"name":"최병진","regDate":"2022-04-27 15:02:46","content":"열두번째 댓글 입니다."},{"name":"최병진","regDate":"2022-04-27 15:02:42","content":"열한번째 댓글 입니다."}]
+				// 또는
+				// []
+				let html = "";
+				if(json.length > 0){
+					$.each(json, function(index, item){
+						html += "<tr>";
+						html += "<td class='comment'>"+(index+1)+"</td>";
+						html += "<td>"+item.content+"</td>";
+						html += "<td class='comment'>"+item.name+"</td>";
+						html += "<td class='comment'>"+item.regdate+"</td>";
+						html += "</tr>";
+					});
+				}
+				else {
+					html += "<tr>";
+					html += "<td colspan='4' class='comment'>댓글이 없습니다</td>";				
+					html += "</tr>";
+				}
+				
+				$("tbody#commentDisplay").html(html);
+				
+				// 페이지바 함수 호출
+				makeCommentPageBar(currentShowPageNo);
+			},
+			error: function(request, status, error){
+				alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+			}
+		});
+		
+	}// end of function goViewComment(currentShowPageNo) {}--------------------------------------
+	
+	
+	// ==== 댓글내용 페이지바 Ajax로 만들기 ==== //
+	function makeCommentPageBar(currentShowPageNo) {
+		
+		<%-- == 원글에 대한 댓글의 totalPage 수를 알아오려고 한다. == --%>
+		$.ajax({
+			url: "<%=request.getContextPath()%>/getCommentTotalPage.action",
+			data:{"parentSeq":"${requestScope.boardvo.seq}",
+				  "sizePerPage":"5"},
+			type:"GET",
+			dataType:"JSON",
+			success:function(json) {
+			//	console.log("확인용 댓글의 전체페이지수 : " + json.totalPage);
+				
+				if(json.totalPage > 0) {
+					// 댓글이 있는 경우
+					
+					const totalPage = json.totalPage;
+					
+					let pageBarHTML = "<ul style='list-style: none;'>";
+					
+					const blockSize = 10;
+				//	const blockSize = 2;
+					
+					// blockSize 는 1개 블럭(토막)당 보여지는 페이지번호의 개수 이다.
+	               /*
+	                     		  1  2  3  4  5  6  7  8  9 10  [다음][마지막]   -- 1개블럭
+			        [맨처음][이전]  11 12 13 14 15 16 17 18 19 20  [다음][마지막]   -- 1개블럭
+			        [맨처음][이전]  21 22 23
+	               */
+					
+					let loop = 1;
+					/*
+						loop는 1부터 증가하여 1개 블럭을 이루는 페이지번호의 개수[ 지금은 10개(== blockSize) ] 까지만 증가하는 용도이다.
+					*/
+					
+					if(typeof currentShowPageNo == "string"){
+						currentShowPageNo = Number(currentShowPageNo);						
+					} // 웹에서 function 파라미터가 스트링으로 들어오기때문에 숫자로 변환시킬 필요가 있다.
+					
+				    // *** !! 다음은 currentShowPageNo를 얻어와서 pageNo를 구해주는 공식이다. !! *** //
+					let pageNo = Math.floor( (currentShowPageNo - 1)/blockSize ) * blockSize + 1;
+				      
+					<%--
+						(3-1)/10 ==> 0.2
+						
+						currentShowPageNo 가 3페이지 이라면 pageNo 는 1이 되어야 한다.
+						((3 - 1)/10) * 10 + 1;
+						( 2/10 ) * 10 + 1;
+						( 0.2 ) * 10 + 1;
+						Math.floor(0.2) * 10 + 1; // 소수부가 있을시 Math.floor(0.2) 은 0.2보다 작은 최대의 정수인 0을 나타낸다.
+						0 * 10 + 1
+						1
+						
+						currentShowPageNo 가 11페이지 이라면 pageNo 는 11이 되어야 한다.
+						((11 - 1)/10) * 10 + 1;
+						( 10/10 ) * 10 + 1;
+						( 1 ) * 10 + 1;
+						Math.floor( 1 ) * 10 + 1; // 소수부가 없을시 Math.floor(1) 은 그대로 1이다.
+						1 * 10 + 1
+						11
+						
+						currentShowPageNo 가 20페이지 이라면 pageNo 는 11이 되어야 한다.
+						((20 - 1)/10) * 10 + 1;
+						( 19/10 ) * 10 + 1;
+						( 1.9 ) * 10 + 1;
+						Math.floor( 1.9 ) * 10 + 1; // 소수부가 있을시 Math.floor(1,9) 은 1.9 보다 작은 최대의 정수인 1을 나타낸다.
+						1 * 10 + 1
+						11
+					--%>
+					
+				   /*
+				       1  2  3  4  5  6  7  8  9  10  -- 첫번째 블럭의 페이지번호 시작값(pageNo)은 1 이다.
+				       11 12 13 14 15 16 17 18 19 20  -- 두번째 블럭의 페이지번호 시작값(pageNo)은 11 이다.
+				       21 22 23 24 25 26 27 28 29 30  -- 세번째 블럭의 페이지번호 시작값(pageNo)은 21 이다.
+				       
+				       currentShowPageNo         pageNo
+				      ----------------------------------
+				            1                      1 = ((1 - 1)/10) * 10 + 1
+				            2                      1 = ((2 - 1)/10) * 10 + 1
+				            3                      1 = ((3 - 1)/10) * 10 + 1
+				            4                      1
+				            5                      1
+				            6                      1
+				            7                      1 
+				            8                      1
+				            9                      1
+				            10                     1 = ((10 - 1)/10) * 10 + 1
+				           
+				            11                    11 = ((11 - 1)/10) * 10 + 1
+				            12                    11 = ((12 - 1)/10) * 10 + 1
+				            13                    11 = ((13 - 1)/10) * 10 + 1
+				            14                    11
+				            15                    11
+				            16                    11
+				            17                    11
+				            18                    11 
+				            19                    11 
+				            20                    11 = ((20 - 1)/10) * 10 + 1
+				            
+				            21                    21 = ((21 - 1)/10) * 10 + 1
+				            22                    21 = ((22 - 1)/10) * 10 + 1
+				            23                    21 = ((23 - 1)/10) * 10 + 1
+				            ..                    ..
+				            29                    21
+				            30                    21 = ((30 - 1)/10) * 10 + 1
+				   */
+					
+					// === [맨처음][이전]만들기 === //
+					if(pageNo != 1) {
+						pageBarHTML += "<li style='display:inline-block; width:70px; font-size:12pt;'><a href='javascript:goViewComment(\"1\")'>[맨처음]</a></li>";
+						pageBarHTML += "<li style='display:inline-block; width:50px; font-size:12pt;'><a href='javascript:goViewComment(\""+(pageNo-1)+"\")'>[이전]</a></li>";
+					}
+					
+					while( !(loop > blockSize || pageNo > totalPage) ) {
+						if(pageNo == currentShowPageNo) {
+							pageBarHTML += "<li style='display:inline-block; width:30px; font-size:12pt; border:solid 1px gray; color:red; padding:2px 4px;'>"+pageNo+"</a></li>";
+						}
+						else {
+							pageBarHTML += "<li style='display:inline-block; width:30px; font-size:12pt;'><a href='javascript:goViewComment(\""+pageNo+"\")'>"+pageNo+"</a></li>";
+						}
+						
+						loop++;
+						pageNo++;
+						
+					}// end of while--------------------------------------------------
+					
+					
+					// === [다음][맨마지막]만들기 === //
+					if(pageNo <= totalPage) {
+						pageBarHTML += "<li style='display:inline-block; width:50px; font-size:12pt;'><a href='javascript:goViewComment(\""+pageNo+"\")'>[다음]</a></li>";
+						pageBarHTML += "<li style='display:inline-block; width:70px; font-size:12pt;'><a href='javascript:goViewComment(\""+totalPage+"\")'>[마지막]</a></li>";
+					}
+				   
+					pageBarHTML += "</ul>";					
+					
+					$("div#pageBar").html(pageBarHTML);
+				}// end of if(json.totalPage > 0){}-----------------------------------
+			
+			},
+			error: function(request, status, error){
+				alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+			}
+		});
+		
+	}// end of function makeCommentPageBar(currentShowPageNo) {}-------------------------------------
 	
 </script>
 
@@ -182,6 +371,15 @@
 		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/edit.action?seq=${requestScope.boardvo.seq}'">글수정하기</button>
 		<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/del.action?seq=${requestScope.boardvo.seq}'">글삭제하기</button>		
 		
+		<%-- === #141. 어떤글에 대한 답변글쓰기는 로그인 되어진 회원의 gradelevel 컬럼의 값이 10인 직원들만 답변글쓰기가 가능하다. === --%>
+		<c:if test="${sessionScope.loginuser.gradelevel == 10}">
+			<%-- 			
+				<span>groupno : ${requestScope.boardvo.groupno}</span>			
+				<span>depthno : ${requestScope.boardvo.depthno}</span>
+			--%>				
+			<button type="button" class="btn btn-secondary btn-sm mr-3" onclick="javascript:location.href='<%= request.getContextPath() %>/add.action'">답변글쓰기</button>
+		</c:if>
+		
 		<%-- === #83. 댓글쓰기 폼 추가 === --%>
 		<c:if test="${not empty sessionScope.loginuser}">
 			<h3 style="margin-top: 50px;">댓글쓰기</h3>
@@ -189,7 +387,7 @@
 			<form name="addWriteFrm" id="addWriteFrm" style="margin-top: 20px;">
 				<table class="table" style="width: 1024px">
 					<tr style="height: 30px;">
-						<th width="10%" >성명</th>
+						<th width=                                                                                                                                                                          "10%" >성명</th>
 						<td>
 	                  		<input type="hidden" name="fk_userid" id="fk_userid" value="${sessionScope.loginuser.userid}" />
 	                  		<input type="text" name="name" id="name" value="${sessionScope.loginuser.name}" readonly />
@@ -236,6 +434,11 @@
 			</thead>
 			<tbody id="commentDisplay"></tbody>
 		</table>
+				
+		<%-- === #136. 댓글 페이지바 === --%>
+		<div style="display: flex; margin-bottom: 50px;">
+			<div id="pageBar" style="margin: auto; text-align: center;"></div>
+		</div>
 				
 	</c:if>
 

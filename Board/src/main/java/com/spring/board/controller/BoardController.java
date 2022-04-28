@@ -669,7 +669,7 @@ public class BoardController {
 		// 먼저 총 게시물 건수(totalCount)를 구해와야 한다.
 		// 총 게시물 건수(totalCount)는 검색조건이 있을때와 없을때로 나뉘어진다.
 		int totalCount = 0; 		// 총 게시물 건수
-		int sizePerPage = 3; 		// 한 페이지당 보여줄 게시물 건수
+		int sizePerPage = 10; 		// 한 페이지당 보여줄 게시물 건수
 		int currentShowPageNo = 0; 	// 현재 보여주는 페이지번호로서, 초기치로는 1페이지로 설정함.
 		int totalPage = 0;			// 총 페이지수(웹브라우저상에서 보여줄 총 페이지 개수, 페이지바)
 		
@@ -730,7 +730,7 @@ public class BoardController {
 		
 		
 		// === #121. 페이지바 만들기 === //
-		int blockSize = 2;
+		int blockSize = 10;
 		// blockSize 는 1개 블럭(토막)당 보여지는 페이지번호의 개수이다.
 		/*
 		        		  1  2  3  4  5  6  7  8  9 10 [다음][마지막]  -- 1개블럭
@@ -1178,6 +1178,84 @@ public class BoardController {
 		}
 		
 		return jsonArr.toString();
+	}
+	
+	
+	// === #128. 원게시물에 딸린 댓글들을 페이징 처리해서 조회해오기(Ajax 로 처리) == //
+	@ResponseBody
+	@RequestMapping(value="/commentList.action", method= {RequestMethod.GET}, produces="text/plain;charset=UTF-8")
+	public String commentList(HttpServletRequest request) {
+		
+		String parentSeq = request.getParameter("parentSeq");
+		String currentShowPageNo = request.getParameter("currentShowPageNo");
+		
+		if(currentShowPageNo == null) {
+			currentShowPageNo = "1";
+		}
+		
+		int sizePerPage = 5;// 한 페이지당 5개의 댓글을 보여줄 것임.
+		
+		/*
+			currentShowPageNo	startRno	endRno
+			---------------------------------------
+				1page		==>		1		   5
+				2page		==>		6		   10
+				3page		==>		11		   15
+				4page		==>		16		   20
+				....
+		 */
+		
+		int startRno = ((Integer.parseInt(currentShowPageNo) - 1) * sizePerPage) + 1;
+		int endRno = startRno + sizePerPage - 1;
+		
+		Map<String, String> paraMap = new HashMap<>();
+		
+		paraMap.put("parentSeq", parentSeq);
+		paraMap.put("startRno", String.valueOf(startRno));
+		paraMap.put("endRno", String.valueOf(endRno));
+		
+		
+		
+		List<CommentVO> commentList = service.getCommentListPaging(paraMap);
+		
+		JSONArray jsonArr = new JSONArray(); // []
+		
+		if(commentList != null) {
+			for(CommentVO cmtvo : commentList) {
+				JSONObject jsonObj = new JSONObject();
+				jsonObj.put("content", cmtvo.getContent());
+				jsonObj.put("name", cmtvo.getName());
+				jsonObj.put("regDate", cmtvo.getRegDate());
+				
+				jsonArr.put(jsonObj);
+				
+			}// end of for----------------------------------
+		}
+				
+		return jsonArr.toString();
+	}
+	
+	
+	
+	// === #132. 원게시물에 딸린 댓글 totalPage 알아오기(Ajax 로 처리) == //
+	@ResponseBody
+	@RequestMapping(value="/getCommentTotalPage.action", method= {RequestMethod.GET})
+	public String getCommentTotalPage(HttpServletRequest request) {
+		
+		String parentSeq = request.getParameter("parentSeq");
+		String sizePerPage = request.getParameter("sizePerPage");
+		
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("parentSeq", parentSeq);
+		paraMap.put("sizePerPage", sizePerPage);
+		
+		// 원글 글번호(parentSeq)에 해당하는 댓글의 totalPage 수 알아오기
+		int totalPage = service.getCommentTotalPage(paraMap);
+		
+		JSONObject jsonObj = new JSONObject();
+		jsonObj.put("totalPage", totalPage);	// {"totalPage":5}
+		
+		return jsonObj.toString();
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////

@@ -264,4 +264,18 @@ public class BoardService implements InterBoardService {
 		return boardList;
 	}
 
+	// === #129. 원게시물에 딸린 댓글들을 페이징 처리해서 조회해오기(Ajax 로 처리) == //
+	@Override
+	public List<CommentVO> getCommentListPaging(Map<String,String> paraMap) {
+		List<CommentVO> commentList = dao.getCommentListPaging(paraMap);
+		return commentList;
+	}
+
+	// === #133. 원글번호에 해당하는 댓글의 totalPage 수 알아오기 === //
+	@Override
+	public int getCommentTotalPage(Map<String, String> paraMap) {
+		int totalPage = dao.getCommentTotalPage(paraMap);
+		return totalPage;
+	}
+
 }

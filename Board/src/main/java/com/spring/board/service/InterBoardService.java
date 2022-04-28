@@ -60,5 +60,11 @@ public interface InterBoardService {
 
 	// 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것)
 	List<BoardVO> boardListSearchWithPaging(Map<String, String> paraMap);
+
+	// 원게시물에 딸린 댓글들을 페이징 처리해서 조회해오기(Ajax 로 처리)
+	List<CommentVO> getCommentListPaging(Map<String, String> paraMap);
+
+	// 원글번호(parentSeq) 에 해당하는 댓글의 totalPage 수 알아오기
+	int getCommentTotalPage(Map<String, String> paraMap);
 	
 }

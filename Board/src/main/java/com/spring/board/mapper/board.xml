@@ -139,6 +139,7 @@
 	
 	
 	<!-- ==== #66. 글 1개 조회하기 ==== -->
+	<!--  
 	<select id="getView" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
 		select previousseq, previoussubject
 		     , seq, fk_userid, name, subject, content, readCount, regDate, pw
@@ -160,13 +161,42 @@
 		) V
 		where V.seq = #{seq}
 	</select>
+	-->
+	
+	<!-- ==== #140. (댓글 및 답변글쓰기 게시판에서) 글 1개 조회하기 ==== 
+			    먼저 위의 #66 을 주석처리 한 다음에 아래와 같이 한다.
+	-->
+	<select id="getView" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
+		select previousseq, previoussubject
+		     , seq, fk_userid, name, subject, content, readCount, regDate, pw
+		     , nextseq, nextsubject
+		     , groupno, fk_seq, depthno
+		from
+		(
+		select lag(seq,1) over(order by seq desc) AS previousseq
+		     , lag(subject,1) over(order by seq desc) AS previoussubject       
+		     , seq, fk_userid, name, subject, content, readCount 
+		     , to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate     
+		     , pw
+		     , lead(seq,1) over(order by seq desc) AS nextseq
+		     , lead(subject,1) over(order by seq desc)  AS nextsubject
+		     
+		     , groupno, fk_seq, depthno
+		from tbl_board
+		where status = 1
+		<if test='searchType != "" and searchWord != ""'>
+		and lower(${searchType}) like '%'|| lower(#{searchWord}) ||'%'
+		</if>
+		) V
+		where V.seq = #{seq}
+	</select>
 	
 	
 	<!-- ==== #67. 글조회수 1증가하기 ==== -->
 	<update id="setAddReadCount" parameterType="String">
 		update tbl_board set readCount = readCount + 1
 		where seq = #{seq}
-	</update>
+	</update>		
 	
 	
 	<!-- ==== #75. 1개글 수정하기 ==== -->
@@ -299,5 +329,29 @@
 		</if>
 		) V
 		where rno between #{startRno} and #{endRno}
+    </select>
+    
+    
+    <!-- === #130. 원게시물에 딸린 댓글들을 페이징 처리해서 조회해오기(Ajax 로 처리) -->
+    <select id="getCommentListPaging" parameterType="HashMap" resultType="com.spring.board.model.CommentVO">
+    	<!-- 첨부파일이 없는 경우 -->
+    	select name, content, regDate
+		from
+		(
+		  select row_number() over(order by seq desc) as rno, name, content, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate 
+		  from tbl_comment
+		  where status = 1 and parentSeq = #{parentSeq}
+		) V
+		where rno between #{startRno} and #{endRno}
+    	
+    	<!-- 첨부파일이 있는 경우 -->
+    </select>
+    
+    
+    <!-- === #135. 원글번호(parentSeq) 에 해당하는 댓글의 totalPage 수 알아오기 === -->
+    <select id="getCommentTotalPage" parameterType="HashMap" resultType="int">
+    	select ceil(count(*)/#{sizePerPage})
+		from tbl_comment
+		where status = 1 and parentSeq = #{parentSeq}    	
     </select>
 </mapper>

@@ -411,7 +411,25 @@ from
 where V.seq = 11
 
 
+select name, content, regDate
+from
+(
+ select row_number() over(order by seq desc) as rno, name, content, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate 
+ from tbl_comment
+ where status = 1 and parentSeq = 14
+) V
+where rno between 1 and 3; -- 댓글 1페이지
+
+
+select ceil(count(*)/3)
+from tbl_comment
+where status = 1 and parentSeq = 14
+
 -------------------------------------------------------------------------------------------------------
+    ------ **** 댓글 및 답변글 및 파일첨부가 있는 게시판 **** ------
+
+
+--- **** 답변글쓰기는 일반회원은 불가하고 직원(관리파트)들만 답변글쓰기가 가능하도록 한다. **** ---
 
 -- *** tbl_member 테이블에 gradelevel 이라는 컬럼을 추가하겠다. *** --
 alter table tbl_member
@@ -427,6 +445,111 @@ select *
 from tbl_member;
 
 
+drop table tbl_comment purge;
+drop sequence commentSeq;
+drop table tbl_board purge;
+drop sequence boardSeq;
+
+create table tbl_board
+(seq           number                not null    -- 글번호
+,fk_userid     varchar2(20)          not null    -- 사용자ID
+,name          varchar2(20)          not null    -- 글쓴이 
+,subject       Nvarchar2(200)        not null    -- 글제목
+,content       Nvarchar2(2000)       not null    -- 글내용   
+,pw            varchar2(20)          not null    -- 글암호
+,readCount     number default 0      not null    -- 글조회수
+,regDate       date default sysdate  not null    -- 글쓴시간
+,status        number(1) default 1   not null    -- 글삭제여부   1:사용가능한 글,  0:삭제된글
+,commentCount  number default 0      not null    -- 댓글의 개수 
+
+,groupno       number                not null    -- 답변글쓰기에 있어서 그룹번호 
+                                                 -- 원글(부모글)과 답변글은 동일한 groupno 를 가진다.
+                                                 -- 답변글이 아닌 원글(부모글)인 경우 groupno 의 값은 groupno 컬럼의 최대값(max)+1 로 한다.
+
+,fk_seq         number default 0      not null   -- fk_seq 컬럼은 절대로 foreign key가 아니다.!!!!!!
+                                                 -- fk_seq 컬럼은 자신의 글(답변글)에 있어서 
+                                                 -- 원글(부모글)이 누구인지에 대한 정보값이다.
+                                                 -- 답변글쓰기에 있어서 답변글이라면 fk_seq 컬럼의 값은 
+                                                 -- 원글(부모글)의 seq 컬럼의 값을 가지게 되며,
+                                                 -- 답변글이 아닌 원글일 경우 0 을 가지도록 한다.
+
+,depthno        number default 0       not null  -- 답변글쓰기에 있어서 답변글 이라면
+                                                 -- 원글(부모글)의 depthno + 1 을 가지게 되며,
+                                                 -- 답변글이 아닌 원글일 경우 0 을 가지도록 한다.
+
+,fileName       varchar2(255)                    -- WAS(톰캣)에 저장될 파일명(2020120809271535243254235235234.png)                                       
+,orgFilename    varchar2(255)                    -- 진짜 파일명(강아지.png)  // 사용자가 파일을 업로드 하거나 파일을 다운로드 할때 사용되어지는 파일명 
+,fileSize       number                           -- 파일크기  
+
+,constraint PK_tbl_board_seq primary key(seq)
+,constraint FK_tbl_board_fk_userid foreign key(fk_userid) references tbl_member(userid)
+,constraint CK_tbl_board_status check( status in(0,1) )
+);
+
+create sequence boardSeq
+start with 1
+increment by 1
+nomaxvalue
+nominvalue
+nocycle
+nocache;
+
+
+create table tbl_comment
+(seq           number               not null   -- 댓글번호
+,fk_userid     varchar2(20)         not null   -- 사용자ID
+,name          varchar2(20)         not null   -- 성명
+,content       varchar2(1000)       not null   -- 댓글내용
+,regDate       date default sysdate not null   -- 작성일자
+,parentSeq     number               not null   -- 원게시물 글번호
+,status        number(1) default 1  not null   -- 글삭제여부
+                                               -- 1 : 사용가능한 글,  0 : 삭제된 글
+                                               -- 댓글은 원글이 삭제되면 자동적으로 삭제되어야 한다.
+,constraint PK_tbl_comment_seq primary key(seq)
+,constraint FK_tbl_comment_userid foreign key(fk_userid) references tbl_member(userid)
+,constraint FK_tbl_comment_parentSeq foreign key(parentSeq) references tbl_board(seq) on delete cascade
+,constraint CK_tbl_comment_status check( status in(1,0) ) 
+);
+
+create sequence commentSeq
+start with 1
+increment by 1
+nomaxvalue
+nominvalue
+nocycle
+nocache;
+
+
+desc tbl_board;
+
+
+begin
+    for i in 1..100 loop
+        insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status, groupno)
+        values(boardSeq.nextval, 'leess', '이순신', '이순신 입니다'||i, '안녕하세요? 이순신'|| i ||' 입니다.', '1234', default, default, default, i);
+    end loop;
+end;
+
+
+begin
+    for i in 101..200 loop
+        insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status, groupno)
+        values(boardSeq.nextval, 'eomjh', '엄정화', '엄정화 입니다'||i, '안녕하세요? 엄정화'|| i ||' 입니다.', '1234', default, default, default, i);
+    end loop;
+end;
+
+commit;
+
+
+select *
+from tbl_board
+order by seq desc;
+
+
+update tbl_board set subject = '문의드립니다. 자바가 뭔가요?'
+where seq = 198
+
+commit;
 
 ------------- >>>>>>>> 일정관리(풀캘린더) 시작 <<<<<<<< -------------
 

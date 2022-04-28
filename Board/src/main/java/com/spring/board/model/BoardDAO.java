@@ -217,5 +217,21 @@ public class BoardDAO implements InterBoardDAO {
 		List<BoardVO> boardList = sqlsession.selectList("board.boardListSearchWithPaging", paraMap);
 		return boardList;
 	}
+
+	
+	// === #130. 원게시물에 딸린 댓글들을 페이징 처리해서 조회해오기(Ajax 로 처리) == //
+	@Override
+	public List<CommentVO> getCommentListPaging(Map<String, String> paraMap) {
+		List<CommentVO> commentList = sqlsession.selectList("board.getCommentListPaging", paraMap);
+		return commentList;
+	}
+
+	
+	// === #134. 원글번호(parentSeq) 에 해당하는 댓글의 totalPage 수 알아오기 === //
+	@Override
+	public int getCommentTotalPage(Map<String, String> paraMap) {
+		int totalPage = sqlsession.selectOne("board.getCommentTotalPage", paraMap);
+		return totalPage;
+	}
 		
 }
