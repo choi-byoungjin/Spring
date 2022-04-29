@@ -551,6 +551,57 @@ where seq = 198
 
 commit;
 
+
+select seq, fk_userid, name, subject, readCount, regDate, commentCount
+from
+(
+    select row_number() over(order by seq desc) AS rno,
+            seq, fk_userid, name, subject, readCount, 
+            to_char(regDate,'yyyy-mm-dd hh24:mi:ss') as regDate, 
+            commentCount
+    from tbl_board
+    where status = 1
+   -- and lower(subject) like '%'||lower('정화')||'%'
+) V
+where rno between 1 and 3
+
+
+select seq, fk_userid, name, subject, readCount, regDate, commentCount, groupno, fk_seq, depthno
+from
+(
+    select rownum as rno,
+            seq, fk_userid, name, subject, readCount, regDate, commentCount, groupno, fk_seq, depthno
+    from
+        (
+        select seq, fk_userid, name, subject, readCount,
+               to_char(regDate,'yyyy-mm-dd hh24:mi:ss') as regDate,
+               commentCount,
+               groupno, fk_seq, depthno
+        from tbl_board
+        where status = 1
+        -- and lower(subject) like '%'||lower('정화')||'%'
+        start with fk_seq = 0
+        connect by prior seq = fk_seq
+        order siblings by groupno desc, seq asc
+    ) V
+) T
+where rno between '1' and '10' -- 1페이지
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 ------------- >>>>>>>> 일정관리(풀캘린더) 시작 <<<<<<<< -------------
 
 -- *** 캘린더 대분류(내캘린더, 사내캘린더  분류) ***
@@ -661,5 +712,11 @@ ON SD.fk_userid = M.userid
 JOIN tbl_calendar_small_category SC
 ON SD.fk_smcatgono = SC.smcatgono
 where SD.scheduleno = 21;
+
+
+select max(groupno)
+from tbl_board;
+
+
 
 ------------- >>>>>>>> 일정관리(풀캘린더) 끝 <<<<<<<< -------------

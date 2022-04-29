@@ -183,6 +183,7 @@
 	<!-- ==== #140. (댓글 및 답변글쓰기 게시판에서) 글 1개 조회하기 ==== 
 			    먼저 위의 #66 을 주석처리 한 다음에 아래와 같이 한다.
 	-->
+	<!--
 	<select id="getView" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
 		select previousseq, previoussubject
 		     , seq, fk_userid, name, subject, content, readCount, regDate, pw
@@ -199,6 +200,40 @@
 		     , lead(subject,1) over(order by seq desc)  AS nextsubject
 		     
 		     , groupno, fk_seq, depthno
+		from tbl_board
+		where status = 1
+		<if test='searchType != "" and searchWord != ""'>
+		and lower(${searchType}) like '%'|| lower(#{searchWord}) ||'%'
+		</if>
+		) V
+		where V.seq = #{seq}
+	</select>
+	-->
+	
+	<!-- ==== #161. (댓글 및 답변글쓰기 및 파일첨부가 있는 게시판에서) 글 1개 조회하기 ==== 
+			    먼저 위의 #140 을 주석처리 한 다음에 아래와 같이 한다.
+	-->
+	<select id="getView" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
+		select previousseq, previoussubject
+		     , seq, fk_userid, name, subject, content, readCount, regDate, pw
+		     , nextseq, nextsubject
+		     , groupno, fk_seq, depthno
+		     , fileName, orgFilename, fileSize
+		from
+		(
+		select lag(seq,1) over(order by seq desc) AS previousseq
+		     , lag(subject,1) over(order by seq desc) AS previoussubject
+		            
+		     , seq, fk_userid, name, subject, content, readCount 
+		     , to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate     
+		     , pw
+		     
+		     , lead(seq,1) over(order by seq desc) AS nextseq
+		     , lead(subject,1) over(order by seq desc)  AS nextsubject
+		     
+		     , groupno, fk_seq, depthno
+		     
+		     , fileName, orgFilename, fileSize
 		from tbl_board
 		where status = 1
 		<if test='searchType != "" and searchWord != ""'>
@@ -330,7 +365,8 @@
     </select>
     
     
-    <!-- === #119. 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것) === -->
+    <!-- === #120. 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것) === -->
+    <!--  
     <select id="boardListSearchWithPaging" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">
     	select seq, fk_userid, name, subject, readCount, regDate, commentCount
 		from
@@ -345,6 +381,67 @@
 		and lower(${searchType}) like '%'||lower(#{searchWord})||'%'
 		</if>
 		) V
+		where rno between #{startRno} and #{endRno}
+    </select>
+    -->
+    
+    
+    
+    <!-- === #148. 답변형 게시판의 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것) 
+    		  먼저 위의 #120 을 주석처리한 이후에 아래와 같이 한다. === 
+    		  
+    <select id="boardListSearchWithPaging" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">    							
+		select seq, fk_userid, name, subject, readCount, regDate, commentCount, groupno, fk_seq, depthno
+		from
+		(
+		    select rownum as rno,
+		            seq, fk_userid, name, subject, readCount, regDate, commentCount, groupno, fk_seq, depthno
+		    from
+		        (
+		        select seq, fk_userid, name, subject, readCount,
+		               to_char(regDate,'yyyy-mm-dd hh24:mi:ss') as regDate,
+		               commentCount,
+		               groupno, fk_seq, depthno
+		        from tbl_board
+		        where status = 1
+		        <if test='searchType != "" and searchWord != ""'>		        
+		        and lower(${searchType}) like '%'||lower(#{searchWord})||'%'
+		        </if>
+		        start with fk_seq = 0
+		        connect by prior seq = fk_seq
+		        order siblings by groupno desc, seq asc
+		    ) V
+		) T
+		where rno between #{startRno} and #{endRno}
+    </select>
+    -->
+    
+    
+    <!-- === #160. 파일첨부가 있는 답변형 게시판의 페이징 처리한 글목록 가져오기(검색이 있든지, 검색이 없든지 모두 다 포함 한 것) 
+    		  먼저 위의 #148 을 주석처리한 이후에 아래와 같이 한다. === -->
+    <select id="boardListSearchWithPaging" parameterType="HashMap" resultType="com.spring.board.model.BoardVO">    							
+		select seq, fk_userid, name, subject, readCount, regDate, commentCount, groupno, fk_seq, depthno, fileName
+		from
+		(
+		    select rownum as rno,
+		            seq, fk_userid, name, subject, readCount, regDate, commentCount, groupno, fk_seq, depthno, fileName
+		    from
+		        (
+		        select seq, fk_userid, name, subject, readCount,
+		               to_char(regDate,'yyyy-mm-dd hh24:mi:ss') as regDate,
+		               commentCount,
+		               groupno, fk_seq, depthno,
+		               fileName
+		        from tbl_board
+		        where status = 1
+		        <if test='searchType != "" and searchWord != ""'>		        
+		        and lower(${searchType}) like '%'||lower(#{searchWord})||'%'
+		        </if>
+		        start with fk_seq = 0
+		        connect by prior seq = fk_seq
+		        order siblings by groupno desc, seq asc
+		    ) V
+		) T
 		where rno between #{startRno} and #{endRno}
     </select>
     
@@ -373,9 +470,24 @@
     </select>
     
     
-    <!-- === #145. tbl_board 테이블에서 groupno 컬럼의 최대값 알아오기 === -->
+    <!-- === #146. tbl_board 테이블에서 groupno 컬럼의 최대값 알아오기 === -->
     <select id="getGroupnoMax" resultType="int">
     	select nvl(max(groupno), 0)
 		from tbl_board
     </select>
+    
+    
+    <!-- === #159. 글쓰기(파일첨부가 있는 글쓰기) === -->
+    <insert id="add_withFile" parameterType="com.spring.board.model.BoardVO">
+    	<if test='fk_seq.equals("")'>
+			insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status, groupno, fk_seq, depthno, fileName, orgFilename, fileSize)
+			values(boardSeq.nextval, #{fk_userid}, #{name}, #{subject}, #{content}, #{pw}, default, default, default, #{groupno}, default, default, #{fileName}, #{orgFilename}, #{fileSize})	
+		</if>
+		
+		<if test='!fk_seq.equals("")'>
+			insert into tbl_board(seq, fk_userid, name, subject, content, pw, readCount, regDate, status, groupno, fk_seq, depthno, fileName, orgFileName, fileSize)
+			values(boardSeq.nextval, #{fk_userid}, #{name}, #{subject}, #{content}, #{pw}, default, default, default, #{groupno}, #{fk_seq}, #{depthno}+1, #{fileName}, #{orgFilename}, #{fileSize})
+		</if>
+    </insert>
+
 </mapper>

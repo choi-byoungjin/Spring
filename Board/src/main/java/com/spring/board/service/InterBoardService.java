@@ -66,5 +66,8 @@ public interface InterBoardService {
 
 	// 원글번호(parentSeq) 에 해당하는 댓글의 totalPage 수 알아오기
 	int getCommentTotalPage(Map<String, String> paraMap);
+
+	// 글쓰기(파일첨부가 있는 글쓰기)
+	int add_withFile(BoardVO boardvo);
 	
 }
