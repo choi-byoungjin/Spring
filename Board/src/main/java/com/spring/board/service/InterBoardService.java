@@ -6,7 +6,7 @@ import com.spring.board.model.*;
 
 public interface InterBoardService {
 
-	int test_insert();
+	int test_insert();	// 1, 0 으로 int
 
 	List<TestVO> test_select();
 

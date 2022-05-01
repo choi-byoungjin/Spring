@@ -89,7 +89,7 @@ public class BoardController {
 	// ===> BoardController 객체가 메모리에서 삭제 되어지면  BoardService service 객체는 멤버변수(필드)이므로 메모리에서 자동적으로 삭제되어진다.	
 	
 
-	@Autowired    // Type에 따라 알아서 Bean 을 주입해준다.
+	@Autowired    // Type에 따라 알아서 Bean 을 주입해준다. // 스프링 컨테이너가 알아서 해줌
     private InterBoardService service;
 	
 	// === #155. 파일업로드 및 다운로드를 해주는 FileManager 클래스 의존객체 주입하기(DI : Dependency Injection) ===  
