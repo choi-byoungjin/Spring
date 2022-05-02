@@ -2,6 +2,8 @@ package com.spring.board.controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.UnsupportedEncodingException;
 import java.net.*;
 import java.util.*;
@@ -1230,6 +1232,26 @@ public class BoardController {
 		Map<String, String> paraMap = new HashMap<>(); // map은 확장성이 큰 장점이 있고, 유지보수가 수월하다.
 		paraMap.put("seq", seq);
 		
+		/////////////////////////////////////////////////////////////////
+		// === #164. 파일첨부가 된 글이라면 글 삭제시 먼저 첨부파일을 삭제해주어야 한다. === //
+		paraMap.put("searchType", "");
+		paraMap.put("searchWord", "");
+		
+		BoardVO boardvo = service.getViewWithNoAddCount(paraMap);
+		String fileName = boardvo.getFileName();
+		
+		if(fileName != null && !"".equals(fileName)) {
+			HttpSession session = request.getSession();
+			String root = session.getServletContext().getRealPath("/");
+			String path = root+"resources"+File.separator+"files";
+			
+			paraMap.put("path", path);// 삭제해야할 파일이 저장된 경로
+			paraMap.put("fileName", fileName);// 삭제해야할 파일명
+			
+		}		
+		// === 파일첨부가 된 글이라면 글 삭제시 먼저 첨부파일을 삭제해주어야 한다. 끝 === //
+		/////////////////////////////////////////////////////////////////
+		
 		int n = service.del(paraMap);
 		
 		if(n==1) {
@@ -1296,7 +1318,7 @@ public class BoardController {
 		// 댓글쓰기에 첨부파일이 없는 경우
 		
 		int n = 0;
-
+		
 		try {
 			n = service.addComment(commentvo);
 		} catch (Throwable e) {
@@ -1444,6 +1466,268 @@ public class BoardController {
 		return jsonObj.toString();
 	}
 	
+	
+	// ==== #163. 첨부파일 다운로드받기 ==== //
+	@RequestMapping(value="/download.action")
+	public void requiredLogin_download(HttpServletRequest request, HttpServletResponse response) {
+		
+		String seq = request.getParameter("seq");
+		// 첨부파일이 있는 글번호
+		
+		/*
+			첨부파일이 있는 글번호에서
+			2022042914193221541252857600.jpg 처럼
+			이러한 fileName 값을 DB에서 가져와야 한다.
+			또한 orgFilename 값도 DB에서 가져와야 한다.
+		 */
+		
+		Map<String, String> paraMap = new HashMap<>();
+		paraMap.put("searchType", "");
+		paraMap.put("searchWord", "");
+		paraMap.put("seq", seq);
+		
+		response.setContentType("text/html; charset=UTF-8"); // /JSPServletBegin/src/main/java/chap02/GetMethod_01.java
+		PrintWriter out = null; // 웹서비스인지 알려준다. // IO 임포트 하고 예외처리 던져준다.
+		// out 은 웹브라우저에 기술하는 대상체라고 생각하자.
+		
+		try {
+			Integer.parseInt(seq);
+			BoardVO boardvo = service.getViewWithNoAddCount(paraMap);
+			
+			if(boardvo == null || (boardvo != null && boardvo.getFileName() == null)) {
+				out = response.getWriter();
+				// out 은 웹브라우저에 기술하는 대상체라고 생각하자.
+				
+				out.println("<script type='text/javascript'>alert('존재하지 않는 글번호이거나 첨부파일이 없으므로 파일다운로드가 불가합니다.'); history.back();</script>");
+				return; // 종료
+				
+			}
+			else {
+				// 정상적으로 다운로드를 할 경우
+				
+				String fileName = boardvo.getFileName();
+				// 2022042914193221541252857600.jpg 이것이 바로 WAS(톰캣) 디스크에 저장된 파일명이다.
+				
+				String orgFilename = boardvo.getOrgFilename();
+				// 쉐보레전면.jpg 다운로드시 보여줄 파일명
+				
+				// 첨부파일이 저장되어 있는 WAS(톰캣)의 디스크 경로명을 알아와야만 다운로드를 해줄수 있다. 
+	            // 이 경로는 우리가 파일첨부를 위해서 /addEnd.action 에서 설정해두었던 경로와 똑같아야 한다.
+
+				// WAS 의 webapp 의 절대경로를 알아와야 한다.
+				HttpSession session = request.getSession();
+				String root = session.getServletContext().getRealPath("/");
+				
+			//	System.out.println("~~~~ 확인용 webapp 의 절대경로 => " + root);
+				// ~~~~ 확인용 webapp 의 절대경로 => C:\NCS\workspace(spring)\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Board\
+				
+				String path = root+"resources"+File.separator+"files";
+				/* 
+					File.separator 는 운영체제에서 사용하는 폴더와 파일의 구분자이다.
+					운영체제가 Windows 이라면 File.separator 는  "\" 이고,
+					운영체제가 UNIX, Linux 이라면  File.separator 는 "/" 이다. 
+				 */
+				
+				// path 가 첨부파일이 저장될 WAS(톰캣)의 폴더가 된다.
+			//	System.out.println("~~~~ 확인용 path => " + root);
+				// ~~~~ 확인용 webapp 의 절대경로 => C:\NCS\workspace(spring)\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Board\resources\files
+				
+				// **** file 다운로드 하기 **** //
+				boolean flag = false; // file 다운로드 성공, 실패를 알려주는 용도
+				flag = fileManager.doFileDownload(fileName, orgFilename, path, response);
+				// file 다운로드 성공시 flag는 true,
+				// file 다운로드 실패시 flag는 false 를 가진다.
+				
+				if(!flag) {
+					// 다운로드가 실패할 경우 메시지를 띄워준다.
+					out = response.getWriter();
+					// out 은 웹브라우저에 기술하는 대상체라고 생각하자.
+					
+					out.println("<script type='text/javascript'>alert('파일다운로드가 실패되었습니다.'); history.back();</script>");
+				}
+				
+			}
+			
+		} catch (NumberFormatException | IOException e) {
+			try {
+				out = response.getWriter();
+				// out 은 웹브라우저에 기술하는 대상체라고 생각하자.
+				
+				out.println("<script type='text/javascript'>alert('파일다운로드가 불가합니다.'); history.back();</script>");				
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}									
+
+		}
+
+	}
+	
+	
+	// ==== #168. 스마트에디터. 드래그앤드롭을 사용한 다중사진 파일 업로드 ==== //
+	@RequestMapping(value="/image/multiplePhotoUpload.action", method={RequestMethod.POST})
+	public void multiplePhotoUpload(HttpServletRequest request, HttpServletResponse response) {
+		
+		/*
+			1. 사용자가 보낸 파일을 WAS(톰캣)의 특정 폴더에 저장해주어야 한다.
+			>>>> 파일이 업로드 되어질 특정 경로(폴더)지정해주기
+			우리는 WAS 의 webapp/resources/photo_upload 라는 폴더로 지정해준다.
+		*/
+		
+		// WAS 의 webapp 의 절대경로를 알아와야 한다.
+		HttpSession session = request.getSession();
+		String root = session.getServletContext().getRealPath("/");
+		String path = root + "resources" + File.separator + "photo_upload";
+		// path 가 첨부파일들을 저장할 WAS(톰캣)의 폴더가 된다.
+		
+	//	System.out.println("~~~~ 확인용 path => " + path);
+		// ~~~~ 확인용 webapp 의 절대경로 => C:\NCS\workspace(spring)\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Board\resources\photo_upload
+		
+		File dir = new File(path);
+		if(!dir.exists()) {
+			dir.mkdirs();
+		}
+		try {
+			String filename = request.getHeader("file-name");// 파일명(문자열)을 받는다 - 일반 원본파일명
+			// 네이버 스마트에디터를 사용한 파일업로드시 싱글파일업로드와는 다르게 멀티파일업로드는 파일명이 header 속에 담겨져 넘어오게 되어있다. 
+	        
+		    /*
+				[참고]
+				HttpServletRequest의 getHeader() 메소드를 통해 클라이언트 사용자의 정보를 알아올 수 있다. 
+		
+				request.getHeader("referer");           // 접속 경로(이전 URL)
+				request.getHeader("user-agent");        // 클라이언트 사용자의 시스템 정보
+				request.getHeader("User-Agent");        // 클라이언트 브라우저 정보 
+				request.getHeader("X-Forwarded-For");   // 클라이언트 ip 주소 
+				request.getHeader("host");              // Host 네임  예: 로컬 환경일 경우 ==> localhost:9090    
+		    */
+			
+		//	System.out.println(">>> 확인용 filename ==> " + filename);
+		//	>>> 확인용 filename ==> berkelekle%EB%8D%A9%ED%81%AC04.jpg
+			
+			InputStream is = request.getInputStream(); // is는 네이버 스마트 에디터를 사용하여 사진첨부하기 된 이미지 파일임.
+			
+			String newFilename = fileManager.doFileUpload(is, filename, path);
+			
+			String ctxPath = request.getContextPath();	// /board
+			
+			String strURL = "";
+			strURL += "&bNewLine=true&sFileName="+newFilename;
+			strURL += "&sWidth=";
+			strURL += "&sFileURL="+ctxPath+"/resources/photo_upload/"+newFilename;
+			
+			// === 웹브라우저 상에 사진 이미지를 쓰기 === //
+			PrintWriter out = response.getWriter();
+			out.print(strURL);
+			
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
+	
+	
+	// === #170. 파일첨부가 있는 댓글쓰기(Ajax 로 처리) === //
+	@ResponseBody
+	@RequestMapping(value="/addComment_withAttach.action", method= {RequestMethod.POST}, produces="text/plain;charset=UTF-8")
+	public String addComment_withAttach(CommentVO commentvo, MultipartHttpServletRequest mrequest) {
+		// 댓글쓰기에 첨부파일이 있는 경우
+		
+		System.out.println("!!!!");
+		
+		// ==== !!! 첨부파일 업로드 시작 !!! ==== //
+		MultipartFile attach = commentvo.getAttach();
+		
+		if(!attach.isEmpty()) {
+			// attach(첨부파일)가 비어 있지 않으면(즉, 첨부파일이 있는 경우라면)
+			
+			/*
+				1. 사용자가 보낸 첨부파일을 WAS(톰캣)의 특정 폴더에 저장해주어야 한다. 
+				>>> 파일이 업로드 되어질 특정 경로(폴더)지정해주기
+					우리는 WAS의 webapp/resources/files 라는 폴더로 지정해준다.
+					조심할 것은  Package Explorer 에서  files 라는 폴더를 만드는 것이 아니다.       
+			 */
+			// WAS 의 webapp 의 절대경로를 알아와야 한다.
+			HttpSession session = mrequest.getSession();
+			String root = session.getServletContext().getRealPath("/");
+			
+		//	System.out.println("~~~~ 확인용 webapp 의 절대경로 => " + root);
+			// ~~~~ 확인용 webapp 의 절대경로 => C:\NCS\workspace(spring)\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Board\
+			
+			String path = root+"resources"+File.separator+"files";
+			/* 
+				File.separator 는 운영체제에서 사용하는 폴더와 파일의 구분자이다.
+				운영체제가 Windows 이라면 File.separator 는  "\" 이고,
+				운영체제가 UNIX, Linux 이라면  File.separator 는 "/" 이다. 
+			 */
+			
+			// path 가 첨부파일이 저장될 WAS(톰캣)의 폴더가 된다.
+		//	System.out.println("~~~~ 확인용 path => " + root);
+			// ~~~~ 확인용 webapp 의 절대경로 => C:\NCS\workspace(spring)\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Board\resources\files
+		
+		/*
+			2. 파일첨부를 위한 변수의 설정 및 값을 초기화 한 후 파일 올리기
+		 */
+			String newFileName = "";
+			// WAS(톰캣)의 디스크에 저장될 파일명
+			
+			byte[] bytes = null;
+			// 첨부파일의 내용물을 담는 것
+			
+			long fileSize = 0;
+			// 첨부파일의 크기
+			
+			try {
+				bytes = attach.getBytes();
+				// 첨부파일의 내용물을 읽어오는 것
+				
+				String originalFilename = attach.getOriginalFilename();
+				// attach.getOriginalFilename() 이 첨부파일명의 파일명(예: 강아지.png) 이다.
+			//	System.out.println("~~~~ 확인용 originalFilename => " + originalFilename);
+				// ~~~~ 확인용 originalFilename => LG_싸이킹청소기_사용설명서.pdf
+				
+				newFileName = fileManager.doFileUpload(bytes, originalFilename, path);
+				// 첨부되어진 파일을 업로드 하도록 하는 것이다.
+
+			//	System.out.println(">>> 확인용 newFileName => " + newFileName);
+				// >>> 확인용 newFileName => 2022042912303615005145153500.pdf
+				
+			/*
+				3. CommentVO commentvo 에 fileName 값과 orgFilename 값과 fileSize 값을 넣어주기				
+			 */	
+				commentvo.setFileName(newFileName);
+				// WAS(톰캣)에 저장될 파일명(2022042912303615005145153500.png)
+				
+				commentvo.setOrgFilename(originalFilename);
+				// 게시판 페이지에서 첨부된 파일(강아지.png)을 보여줄 때 사용.
+	            // 또한 사용자가 파일을 다운로드 할때 사용되어지는 파일명으로 사용.
+				
+				fileSize = attach.getSize(); // 첨부파일의 크기(단위는 byte임)
+				commentvo.setFileSize(String.valueOf(fileSize));
+				
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+					
+		}		
+		// ==== !!! 첨부파일 업로드 끝 !!! ==== //
+		
+		int n = 0;
+		
+		try {
+			n = service.addComment(commentvo);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}		
+		// 댓글쓰기(insert) 및 원게시물(tbl_board 테이블)에 댓글의 개수 증가(update 1씩 증가)하기 
+		// 이어서 회원의 포인트를 50점을 증가하도록 한다. (tbl_member 테이블에 point 컬럼의 값을 50 증가하도록 update 한다.) 
+		
+		JSONObject jsonObj = new JSONObject();
+		jsonObj.put("n", n);
+		jsonObj.put("name", commentvo.getName());
+		
+		return jsonObj.toString();	// "{"n":1,"name":"엄정화"}" 또는 "{"n":0, "name":"최병진"}"
+	}
+	
+
 	////////////////////////////////////////////////////////////////////////////////////
 	
 	// === 로그인 또는 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 생성 == //

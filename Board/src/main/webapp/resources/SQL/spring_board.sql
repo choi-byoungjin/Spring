@@ -588,14 +588,25 @@ from
 where rno between '1' and '10' -- 1페이지
 
 
+---- **** 댓글쓰기에 파일첨부까지 한 것 **** ----
+alter table tbl_comment
+add fileName varchar2(255); -- WAS(톰캣)에 저장될 파일명(2020120809271535243254235235234.png)                 
 
+alter table tbl_comment
+add orgFilename varchar2(255); -- 진짜 파일명(강아지.png)  // 사용자가 파일을 업로드 하거나 파일을 다운로드 할때 사용되어지는 파일명 
 
+alter table tbl_comment
+add fileSize number; -- 파일크기 
 
+select *
+from tbl_comment;
 
-
-
-
-
+select seq, name, content, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') AS regDate
+     , nvl(fileName,' ') AS fileName
+     , nvl(orgFilename, ' ') AS orgFilename
+     , nvl(to_char(fileSize), ' ') AS fileSize 
+from tbl_comment
+where parentSeq = 201;
 
 
 

@@ -41,7 +41,14 @@
 			return; // 종료
 		}
 		
-		goAddWrite_noAttach();
+		if($("input#attach").val() == "") {
+			// 첨부파일이 없는 댓글쓰기인 경우
+			goAddWrite_noAttach();
+		}
+		else{
+			// 첨부파일이 있는 댓글쓰기인 경우
+			goAddWrite_withAttach();
+		}		
 		
 	}// end of function goAddWrite() {}------------------------------------------------------------
 	
@@ -85,6 +92,56 @@
 		});
 		
 	}// end of function goAddWrite_noAttach() {}-----------------------------------------------------
+	
+	
+	// ==== #169. 파일첨부가 있는 댓글쓰기
+	function goAddWrite_withAttach() {
+		
+		<%-- === ajax로 파일을 업로드할때 가장 널리 사용하는 방법 ==> ajaxForm === //
+			 === 우선 ajaxForm 을 사용하기 위해서는 jquery.form.min.js 이 있어야 하며
+	             /WEB-INF/tiles/layout/layout-tiles1.jsp 와 
+	             /WEB-INF/tiles/layout/layout-tiles2.jsp 에 기술해 두었다. 
+	    --%>
+		
+		<%--
+			// 보내야할 데이터를 선정하는 두번째 방법
+			// jQuery에서 사용하는 것으로써,
+			// form태그의 선택자.serialize(); 을 해주면 form 태그내의 모든 값들을 name값을 키값으로 만들어서 보내준다. 
+			   const queryString = $("form[name=addWriteFrm]").serialize(); 
+		--%>
+		
+		const queryString = $("form[name=addWriteFrm]").serialize();
+		
+		$("form[name=addWriteFrm]").ajaxForm({
+			url:"<%=request.getContextPath()%>/addComment_withAttach.action",
+			data:queryString,
+			type:"POST",
+			enctype:"multipart/form-data",
+			dataType:"JSON",
+			success:function(json){
+				// "{"n":1,"name":"엄정화"}" 또는 "{"n":0, "name":"최병진"}"
+				
+				const n = json.n;
+				if(n == 0) {
+					alert(json.name + "님의 포인트는 300점을 초과할 수 없으므로 댓글쓰기가 불가합니다.");
+				}
+				else {
+				//	goReadComment(); // 페이징 처리 안한 댓글 읽어오기
+					goViewComment(1); // 페이징 처리한 댓글 읽어오기
+				}
+				
+				$("input#commentContent").val("");
+				$("input#attach").val("");
+			},
+			error: function(request, status, error){
+				alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+			}
+		});			
+		
+		$("form[name=addWriteFrm]").submit();
+		
+	}// end of function goAddWrite_noAttach() {}-----------------------------------------------------
+	
 	
 	// == 페이징 처리 안한 댓글 읽어오기 == //
 	function goReadComment() {
@@ -420,6 +477,14 @@
 							<input type="hidden" name="parentSeq" id="parentSeq" value="${requestScope.boardvo.seq}"/>
 						</td>
 					</tr>
+					
+					<tr style="height: 30px;">
+						<th>파일첨부</th>
+						<td>
+							<input type="file" name="attach" id="attach" />
+						</td>
+					</tr>
+					
 					<tr>
 						<th colspan="2">
 							<button type="button" class="btn btn-success btn-sm mr-3" onclick="goAddWrite()">댓글쓰기 확인</button>
@@ -440,10 +505,10 @@
 				<th style="text-align: center;">내용</th>
 	            
 				<%-- 첨부파일 있는 경우 시작 --%>
-			<%-- 	
+			 	
 				<th style="width: 15%;">첨부파일</th>
 				<th style="width: 8%;">bytes</th>
-			--%>	
+				
 				<%-- 첨부파일 있는 경우 끝 --%>
 	            
 				<th style="width: 8%; text-align: center;">작성자</th>
