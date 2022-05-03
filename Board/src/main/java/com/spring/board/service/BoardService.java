@@ -335,4 +335,12 @@ public class BoardService implements InterBoardService {
 		return n;
 	}
 
+
+	// === #172. 댓글 1개 조회해주는 것 === //
+	@Override
+	public CommentVO getCommentOne(String seq) {
+		CommentVO commentvo = dao.getCommentOne(seq);
+		return commentvo;
+	}
+
 }

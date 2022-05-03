@@ -597,6 +597,8 @@ add orgFilename varchar2(255); -- 진짜 파일명(강아지.png)  // 사용자�
 
 alter table tbl_comment
 add fileSize number; -- 파일크기 
+-- 진도상 늦게 추가한 것이니 프로젝트에서는 처음부터 컬럼생성한다.
+
 
 select *
 from tbl_comment;

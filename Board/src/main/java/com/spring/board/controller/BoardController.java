@@ -1430,10 +1430,17 @@ public class BoardController {
 		
 		if(commentList != null) {
 			for(CommentVO cmtvo : commentList) {
-				JSONObject jsonObj = new JSONObject();
+				JSONObject jsonObj = new JSONObject();				
 				jsonObj.put("content", cmtvo.getContent());
 				jsonObj.put("name", cmtvo.getName());
 				jsonObj.put("regDate", cmtvo.getRegDate());
+				
+				// === 댓글읽어오기에 있어서 첨부파일 기능을 넣은 경우 시작 === //	
+				jsonObj.put("seq", cmtvo.getSeq());
+				jsonObj.put("fileName", cmtvo.getFileName());
+				jsonObj.put("orgFilename", cmtvo.getOrgFilename());
+				jsonObj.put("fileSize", cmtvo.getFileSize());
+				// === 댓글읽어오기에 있어서 첨부파일 기능을 넣은 경우 끝 === //
 				
 				jsonArr.put(jsonObj);
 				
@@ -1727,7 +1734,95 @@ public class BoardController {
 		return jsonObj.toString();	// "{"n":1,"name":"엄정화"}" 또는 "{"n":0, "name":"최병진"}"
 	}
 	
+	// === #171. 파일첨부가 있는 댓글쓰기에서 파일다운로드 받기 === //
+	@RequestMapping(value="/downloadComment.action")
+	public void requiredLogin_downloadComment(HttpServletRequest request, HttpServletResponse response) {
+		
+		String seq = request.getParameter("seq");
+		// 첨부파일이 있는 글번호
+		
+		/*
+			첨부파일이 있는 글번호에서
+			2022042914193221541252857600.jpg 처럼
+			이러한 fileName 값을 DB에서 가져와야 한다.
+			또한 orgFilename 값도 DB에서 가져와야 한다.
+		 */
+		
+		response.setContentType("text/html; charset=UTF-8"); // /JSPServletBegin/src/main/java/chap02/GetMethod_01.java
+		PrintWriter out = null; // 웹서비스인지 알려준다. // IO 임포트 하고 예외처리 던져준다.
+		// out 은 웹브라우저에 기술하는 대상체라고 생각하자.
+		
+		try {
+			Integer.parseInt(seq);
+			CommentVO commentvo = service.getCommentOne(seq);
+			
+			if(commentvo == null || (commentvo != null && commentvo.getFileName() == null)) {
+				out = response.getWriter();
+				// out 은 웹브라우저에 기술하는 대상체라고 생각하자.
+				
+				out.println("<script type='text/javascript'>alert('존재하지 않는 댓글번호 이거나 첨부파일이 없으므로 파일다운로드가 불가합니다.'); history.back();</script>");
+				return; // 종료
+				
+			}
+			else {
+				// 정상적으로 다운로드를 할 경우
+				
+				String fileName = commentvo.getFileName();
+				// 2022042914193221541252857600.jpg 이것이 바로 WAS(톰캣) 디스크에 저장된 파일명이다.
+				
+				String orgFilename = commentvo.getOrgFilename();
+				// 쉐보레전면.jpg 다운로드시 보여줄 파일명
+				
+				// 첨부파일이 저장되어 있는 WAS(톰캣)의 디스크 경로명을 알아와야만 다운로드를 해줄수 있다. 
+	            // 이 경로는 우리가 파일첨부를 위해서 /addEnd.action 에서 설정해두었던 경로와 똑같아야 한다.
 
+				// WAS 의 webapp 의 절대경로를 알아와야 한다.
+				HttpSession session = request.getSession();
+				String root = session.getServletContext().getRealPath("/");
+				
+			//	System.out.println("~~~~ 확인용 webapp 의 절대경로 => " + root);
+				// ~~~~ 확인용 webapp 의 절대경로 => C:\NCS\workspace(spring)\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Board\
+				
+				String path = root+"resources"+File.separator+"files";
+				/* 
+					File.separator 는 운영체제에서 사용하는 폴더와 파일의 구분자이다.
+					운영체제가 Windows 이라면 File.separator 는  "\" 이고,
+					운영체제가 UNIX, Linux 이라면  File.separator 는 "/" 이다. 
+				 */
+				
+				// path 가 첨부파일이 저장될 WAS(톰캣)의 폴더가 된다.
+			//	System.out.println("~~~~ 확인용 path => " + root);
+				// ~~~~ 확인용 webapp 의 절대경로 => C:\NCS\workspace(spring)\.metadata\.plugins\org.eclipse.wst.server.core\tmp0\wtpwebapps\Board\resources\files
+				
+				// **** file 다운로드 하기 **** //
+				boolean flag = false; // file 다운로드 성공, 실패를 알려주는 용도
+				flag = fileManager.doFileDownload(fileName, orgFilename, path, response);
+				// file 다운로드 성공시 flag는 true,
+				// file 다운로드 실패시 flag는 false 를 가진다.
+				
+				if(!flag) {
+					// 다운로드가 실패할 경우 메시지를 띄워준다.
+					out = response.getWriter();
+					// out 은 웹브라우저에 기술하는 대상체라고 생각하자.
+					
+					out.println("<script type='text/javascript'>alert('파일다운로드가 실패되었습니다.'); history.back();</script>");
+				}
+				
+			}
+			
+		} catch (NumberFormatException | IOException e) {
+			try {
+				out = response.getWriter();
+				// out 은 웹브라우저에 기술하는 대상체라고 생각하자.
+				
+				out.println("<script type='text/javascript'>alert('파일다운로드가 불가합니다.'); history.back();</script>");				
+			} catch (IOException e1) {
+				e1.printStackTrace();
+			}									
+
+		}
+
+	}
 	////////////////////////////////////////////////////////////////////////////////////
 	
 	// === 로그인 또는 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 생성 == //

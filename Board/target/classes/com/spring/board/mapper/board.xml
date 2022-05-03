@@ -269,10 +269,15 @@
 	<!-- === #88. 댓글쓰기(tbl_comment 테이블에 insert) === -->
 	<insert id="addComment" parameterType="com.spring.board.model.CommentVO">
 		<!-- 첨부파일이 없는 경우 -->
-		insert into tbl_comment(seq, fk_userid, name, content, regDate, parentSeq, status)
-		values(commentSeq.nextval, #{fk_userid}, #{name}, #{content}, default, #{parentSeq}, default)
-		
+		<if test="fileName == null">
+			insert into tbl_comment(seq, fk_userid, name, content, regDate, parentSeq, status)
+			values(commentSeq.nextval, #{fk_userid}, #{name}, #{content}, default, #{parentSeq}, default)
+		</if>
 		<!-- 첨부파일이 있는 경우 -->
+		<if test="fileName != null">
+			insert into tbl_comment(seq, fk_userid, name, content, regDate, parentSeq, status, fileName, orgFilename, fileSize)
+			values(commentSeq.nextval, #{fk_userid}, #{name}, #{content}, default, #{parentSeq}, default, #{fileName}, #{orgFilename}, #{fileSize})
+		</if>
 	</insert>
 	
 	<!--  === #89.-1  tbl_board 테이블에 commentCount 컬럼의 값을 1증가(update) === -->  
@@ -449,6 +454,7 @@
     <!-- === #130. 원게시물에 딸린 댓글들을 페이징 처리해서 조회해오기(Ajax 로 처리) -->
     <select id="getCommentListPaging" parameterType="HashMap" resultType="com.spring.board.model.CommentVO">
     	<!-- 첨부파일이 없는 경우 -->
+    	<!--  
     	select name, content, regDate
 		from
 		(
@@ -457,8 +463,21 @@
 		  where status = 1 and parentSeq = #{parentSeq}
 		) V
 		where rno between #{startRno} and #{endRno}
-    	
+    	-->
     	<!-- 첨부파일이 있는 경우 -->
+    	select seq, name, content, regDate, fileName, orgFilename, fileSize
+		from
+		(
+		  select row_number() over(order by seq desc) as rno
+		  		, seq, name, content, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') as regDate
+		  		, nvl(fileName,' ') AS fileName
+     			, nvl(orgFilename, ' ') AS orgFilename
+     			, nvl(to_char(fileSize), ' ') AS fileSize
+		  from tbl_comment
+		  where status = 1 and parentSeq = #{parentSeq}
+		) V
+		where rno between #{startRno} and #{endRno}
+    	
     </select>
     
     
@@ -490,4 +509,11 @@
 		</if>
     </insert>
 
+
+	<!-- === #174. 댓글1개만 조회해 주는 것 === -->
+	<select id="getCommentOne" parameterType="String" resultType="com.spring.board.model.CommentVO">
+		select fileName, orgFilename
+		from tbl_comment
+		where seq = #{seq}
+	</select>
 </mapper>

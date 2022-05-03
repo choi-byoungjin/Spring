@@ -77,4 +77,7 @@ public interface InterBoardDAO {
 
 	// 글쓰기(파일첨부가 있는 글쓰기)
 	int add_withFile(BoardVO boardvo);
+
+	// 댓글 1개 조회해주는 것
+	CommentVO getCommentOne(String seq);
 }

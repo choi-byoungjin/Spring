@@ -189,17 +189,40 @@
 				  "currentShowPageNo":currentShowPageNo},
 			dataType:"JSON",
 			success:function(json){
-				// [{"name":"최병진","regDate":"2022-04-27 15:02:51","content":"열세번째 댓글 입니다."},{"name":"최병진","regDate":"2022-04-27 15:02:46","content":"열두번째 댓글 입니다."},{"name":"최병진","regDate":"2022-04-27 15:02:42","content":"열한번째 댓글 입니다."}]
+				// == 첨부파일 기능이 없는 경우 ==
+				/* [{"name":"최병진","regDate":"2022-04-27 15:02:51","content":"열세번째 댓글 입니다."},
+					{"name":"최병진","regDate":"2022-04-27 15:02:46","content":"열두번째 댓글 입니다."},
+					{"name":"최병진","regDate":"2022-04-27 15:02:42","content":"열한번째 댓글 입니다."}] */
 				// 또는
 				// []
+				
+				// == 첨부파일 기능이 추가된 경우 ==
+				/* [{"fileName":"202205030921181806568885700.jpg","fileSize":"115654","name":"엄정화","regDate":"2022-05-03 09:21:18","content":"첨부파일 추가 연습 3","seq":"5","orgFilename":"쉐보레실내1.jpg"},
+					{"fileName":"202205030920571785733164000.png","fileSize":"58141","name":"엄정화","regDate":"2022-05-03 09:20:57","content":"첨부파일 추가 연습 2","seq":"4","orgFilename":"refrigerator_lg_normal_1.png"},
+					{"fileName":" ","fileSize":" ","name":"엄정화","regDate":"2022-05-02 12:45:04","content":"안녕하세요","seq":"1","orgFilename":" "}] */
+				// 또는
+				// []
+				
 				let html = "";
 				if(json.length > 0){
 					$.each(json, function(index, item){
 						html += "<tr>";
 						html += "<td class='comment'>"+(index+1)+"</td>";
 						html += "<td>"+item.content+"</td>";
+						
+					<%-- === 첨부파일 기능이 추가된 경우  시작 === --%>
+						if(${sessionScope.loginuser != null}) {
+							html += "<td><a href='<%=request.getContextPath()%>/downloadComment.action?seq="+item.seq+"'>"+item.orgFilename+"</a></td>"; // 고유한 댓글의 seq를 불러와야 orgFilename이 중복이더라도 적합한 파일 다운로드 가능하다.
+						}
+						else {
+							html += "<td>"+item.orgFilename+"</td>";
+						}
+						
+						html += "<td>"+ Number(item.fileSize).toLocaleString('en') +"</td>";	<%-- 숫자로 바꾸고 영어로 바꿔준다. 세자리마다 콤마 --%>
+					<%-- === 첨부파일 기능이 추가된 경우  끝 === --%>
+						
 						html += "<td class='comment'>"+item.name+"</td>";
-						html += "<td class='comment'>"+item.regdate+"</td>";
+						html += "<td class='comment'>"+item.regDate+"</td>";
 						html += "</tr>";
 					});
 				}
