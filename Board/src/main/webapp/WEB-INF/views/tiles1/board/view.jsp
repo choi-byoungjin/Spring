@@ -189,6 +189,8 @@
 				  "currentShowPageNo":currentShowPageNo},
 			dataType:"JSON",
 			success:function(json){
+				// GET방식으로 컬럼이 들어오는지 확인부터 하는 것이 확실함 확인후에 POST방식 사용
+				
 				// == 첨부파일 기능이 없는 경우 ==
 				/* [{"name":"최병진","regDate":"2022-04-27 15:02:51","content":"열세번째 댓글 입니다."},
 					{"name":"최병진","regDate":"2022-04-27 15:02:46","content":"열두번째 댓글 입니다."},

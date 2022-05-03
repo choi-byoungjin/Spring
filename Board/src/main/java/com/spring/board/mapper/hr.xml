@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="hr">
+
+	<!-- === employees 테이블에서 근무중인 사원들의 부서번호 가져오기 === -->
+	<select id="deptIdList" resultType="String">
+		select distinct nvl(department_id, -9999) as department_id
+		from employees
+		order by department_id
+	</select>
+
+	<!-- Map은 오라클을 잘 할 경우 사용하기 좋음, gender,age 예시로 오라클에서 function으로 컬럼을 만들거나 자바에서 메소드생성을 통해 gender,age를 구할 수 있다. -->
+	<resultMap type="HashMap" id="empDeptMap">
+		<result property="department_id" 	column="department_id" 		javaType="String"/> <!-- property는 HashMap의 key값 column은 select문에 있는 것 dao에서 key와 javatype 둘다 string-->
+		<result property="department_name" 	column="department_name" 	javaType="String"/>
+		<result property="employee_id" 		column="employee_id" 		javaType="String"/>
+		<result property="fullname" 		column="fullname" 			javaType="String"/>
+		<result property="hire_date" 		column="hire_date" 			javaType="String"/>
+		<result property="monthsal" 		column="monthsal" 			javaType="String"/>
+		<result property="gender" 			column="gender" 			javaType="String"/>
+		<result property="age" 				column="age" 				javaType="String"/>
+	</resultMap>
+
+	<!-- === employees 테이블에서 조건에 만족하는 사원들을 가져오기 === -->
+	<select id="empList" parameterType="HashMap" resultMap="empDeptMap">
+		select E.department_id, D.department_name, E.employee_id, 
+		       E.first_name || ' ' || E.last_name AS fullname,
+		       to_char(E.hire_date, 'yyyy-mm-dd') AS hire_date,
+		       nvl(E.salary + E.salary*E.commission_pct, E.salary) AS monthsal,
+		       func_gender(E.jubun) AS gender,
+		       func_age(E.jubun) AS age 
+		from employees E left join departments D
+		on E.department_id = D.department_id
+		order by E.department_id, E.employee_id
+	</select>
+</mapper>

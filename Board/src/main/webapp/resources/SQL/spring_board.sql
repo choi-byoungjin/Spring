@@ -455,7 +455,7 @@ create table tbl_board
 ,fk_userid     varchar2(20)          not null    -- 사용자ID
 ,name          varchar2(20)          not null    -- 글쓴이 
 ,subject       Nvarchar2(200)        not null    -- 글제목
-,content       Nvarchar2(2000)       not null    -- 글내용   
+,content       Nvarchar2(2000)       not null    -- 글내용   -- Nvarchar2는 2000이 최대, varchar2는 4000이 최대
 ,pw            varchar2(20)          not null    -- 글암호
 ,readCount     number default 0      not null    -- 글조회수
 ,regDate       date default sysdate  not null    -- 글쓴시간
@@ -608,11 +608,60 @@ select seq, name, content, to_char(regDate, 'yyyy-mm-dd hh24:mi:ss') AS regDate
      , nvl(orgFilename, ' ') AS orgFilename
      , nvl(to_char(fileSize), ' ') AS fileSize 
 from tbl_comment
-where parentSeq = 201;
+where parentSeq = 201
+order by seq desc;
 
 
+select *
+from tbl_board
+order by seq desc;
 
 
+------------------------------------------------------------------------------
+-- >> tbl_board 테이블에서 content 컬럼의 데이터타입을 CLOB 타입으로 변경하기 << --
+-- 스마트에디터때문에 태그가 컬럼에 들어와 varchar2나 Nvarchar2의 범위를 넘어갈 수 있기때문에 CLOB 으로 변경한다.
+create table tbl_board_copy
+as
+select *
+from tbl_board;
+-- Table TBL_BOARD_COPY이(가) 생성되었습니다.
+
+desc tbl_board;
+-- CONTENT      NOT NULL NVARCHAR2(2000)
+
+-- >> CLOB(4GB 까지 저장 가능한 데이터 타입) 타입을 가지는 새로운 컬럼 추가하기 << --
+alter table tbl_board
+add imsi_content clob;
+-- Table TBL_BOARD이(가) 변경되었습니다.
+
+-- >> 데이터를 복사하기 << --
+update tbl_board set imsi_content = content;
+-- 209개 행 이(가) 업데이트되었습니다.
+commit;
+
+-- >> 기존 컬럼 삭제하기 << --
+alter table tbl_board 
+drop column content;
+-- Table TBL_BOARD이(가) 변경되었습니다.
+
+-- >> 새로 추가한 컬럼의 이름을 변경하기 << --
+alter table tbl_board
+rename column imsi_content to content;
+
+-- >> 새로 추가한 컬럼에 NOT NULL 로 설정하기 << --
+alter table tbl_board
+modify content not null;
+
+desc tbl_board;
+-- CONTENT      NOT NULL CLOB 
+
+select *
+from tbl_board
+order by seq desc;
+
+select seq, content, length(content)
+from tbl_board
+order by seq desc;
 
 
 ------------- >>>>>>>> 일정관리(풀캘린더) 시작 <<<<<<<< -------------
@@ -733,3 +782,24 @@ from tbl_board;
 
 
 ------------- >>>>>>>> 일정관리(풀캘린더) 끝 <<<<<<<< -------------
+
+
+
+----- ===> 인사관리 <=== -----
+show user;
+-- USER이(가) "HR"입니다.
+
+select distinct nvl(department_id, -9999) as department_id
+from employees
+order by department_id;
+
+
+select E.department_id, D.department_name, E.employee_id, 
+       E.first_name || ' ' || E.last_name AS fullname,
+       to_char(E.hire_date, 'yyyy-mm-dd') AS hire_date,
+       nvl(E.salary + E.salary*E.commission_pct, E.salary) AS monthsal,
+       func_gender(E.jubun) AS gender,
+       func_age(E.jubun) AS age 
+from employees E left join departments D
+on E.department_id = D.department_id
+order by E.department_id, E.employee_id;
