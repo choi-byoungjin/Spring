@@ -33,6 +33,17 @@
 		       func_age(E.jubun) AS age 
 		from employees E left join departments D
 		on E.department_id = D.department_id
+		where 1=1
+		<if test="arr_DeptId != null">		
+			and nvl(E.department_id, -9999) in 
+			<foreach collection="arr_DeptId" index="i" open="(" separator="," close=")">
+				'${arr_DeptId[i]}'
+			</foreach>
+		</if>
+		
+		<if test="gender != null">
+		    and func_gender(E.jubun) = #{gender}				
+		</if>
 		order by E.department_id, E.employee_id
 	</select>
 </mapper>

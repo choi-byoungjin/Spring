@@ -802,4 +802,9 @@ select E.department_id, D.department_name, E.employee_id,
        func_age(E.jubun) AS age 
 from employees E left join departments D
 on E.department_id = D.department_id
+where 1=1
+-- where nvl(E.department_id, -9999) in (-9999,30,70,100)
+-- where func_gender(E.jubun) = '남'
+and nvl(E.department_id, -9999) in (-9999,30,70,100)
+and func_gender(E.jubun) = '남'
 order by E.department_id, E.employee_id;

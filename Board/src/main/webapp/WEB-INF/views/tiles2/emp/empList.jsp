@@ -55,10 +55,74 @@
 			frm.str_DeptId.value = str_DeptId;
 			
 			frm.method = "GET";
-			frm.action = "";
-		//	frm.submit();
+			frm.action = "empList.action";	// 상대주소
+			frm.submit();
 			
 		});
+		
+		
+		// === 체크박스 유지시키기 시작 === //
+		const str_DeptId = "${requestScope.str_DeptId}";
+	//	console.log(str_DeptId); // "-9999,20,40,70"
+	
+		if(str_DeptId != "") {
+			const arr_DeptId = str_DeptId.split(",");
+			// [-9999,20,40,70]
+			
+			$("input:checkbox[name=deptId]").each(function(index, item){
+				for(let i=0; i<arr_DeptId.length; i++) {
+					if($(item).val() == arr_DeptId[i]) {
+						$(item).prop("checked", true);
+						break;
+					}
+				}
+			});
+		}		
+		// === 체크박스 유지시키기 끝 === //
+
+		
+		// === 성별 유지시키기 시작 === //			
+		const gender = "${requestScope.gender}";
+		if(gender != "") {
+			$("select#gender").val(gender);
+		}
+		// === 성별 유지시키기 끝 === //
+		
+		
+		
+		// ====== Excel 파일로 다운받기 시작 ====== //
+		$("button#btnExcel").click(function(){
+			
+			const arrDeptId = new Array();	// []와 new Array; 같음
+			
+			$("input:checkbox[name=deptId]").each(function(index, item){
+				const bool = $(item).prop("checked"); // 체크박스의 체크유무 검사
+			//	또는 
+			//	const bool = $(item).is(":checked");
+				
+				if(bool == true) {
+					// 체크박스에 체크가 되었으면
+					arrDeptId.push($(item).val());
+				}				
+			});
+			
+			const str_DeptId = arrDeptId.join();
+			
+		//	console.log("~~~ 확인용 str_DeptId => " + str_DeptId);
+			// ~~~ 확인용 str_DeptId => -9999,20,50,60
+			// ~~~ 확인용 str_DeptId =>
+			// ~~~ 확인용 str_DeptId => 10,20,30,40
+			
+			const frm = document.searchFrm;
+			frm.str_DeptId.value = str_DeptId;
+			
+			frm.method = "POST";
+			frm.action = "<%= request.getContextPath()%>/excel/downloadExcelFile.action";	// 상대주소
+			frm.submit();
+			
+		});
+		
+		// ====== Excel 파일로 다운받기 끝 ====== //
 		
 	});// end of $(document).ready(function(){})-------------------------------------------------------------------------------
 
