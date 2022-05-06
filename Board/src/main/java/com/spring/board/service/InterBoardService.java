@@ -10,7 +10,7 @@ public interface InterBoardService {
 
 	List<TestVO> test_select();
 
-	int test_insert(Map<String, String> paraMap);
+	int test_insert(Map<String, String> paraMap); //4월 19일
 
 	int test_insert(TestVO vo);
 
