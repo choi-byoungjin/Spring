@@ -40,11 +40,11 @@
 			 url:"<%= ctxPath%>/test/ajax_insert.action",
 			 type:"POST",
 			 data:{"no":no,
-				   "name":name},
+				   "name":name}, // "no", "name"은 위의 const no, const name
 			 dataType:"json",
 			 success:function(json){  // {"n":1}
 				 if(json.n == 1) {
-					 func_ajaxselect(); 
+					 func_ajaxselect(); // 안에 전부 코딩해도 되지만 복잡하기 때문에 function으로 밖으로 뺀다.
 					 $("input#no").val("");
 					 $("input#name").val("");
 				 }

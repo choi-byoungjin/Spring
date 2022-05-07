@@ -155,11 +155,11 @@ public class BoardController {
 			
 			int n = service.test_insert(paraMap);
 			
-			if(n==1) {
+			if(n==1) { // insert가 완료되면
 				return "redirect:/test/test_select.action";  
 			//  /test/test_select.action 페이지로 redirect(페이지이동)해라는 말이다.  
 			}
-			else {
+			else { // insert가 안되면
 				return "redirect:/test/test_form.action";
 			//  /test/test_form.action 페이지로 redirect(페이지이동)해라는 말이다.	
 			}
@@ -239,6 +239,8 @@ public class BoardController {
 	 return 되어지는 값 그 자체를 웹브라우저에 바로 직접 쓰여지게 하는 것이다. 
 	 일반적으로 JSON 값을 Return 할때 많이 사용된다. 
  */
+	// GET 방식일 경우 "http://localhost:9090/board/test/ajax_insert.action=502&name=똘똘이" 로 주소창에 입력시 데이터 들어가고 웹페이지에 "{"n":1}" 출력한다.
+	
 	@ResponseBody
 	@RequestMapping(value="/test/ajax_insert.action", method = {RequestMethod.POST}) // 오로지 POST방식만 허락하는 것임.
 	public String ajax_insert(HttpServletRequest request) {
@@ -276,7 +278,7 @@ public class BoardController {
 		
 		JSONArray jsonArr = new JSONArray(); // []
 		
-		if(testvoList != null) {
+		if(testvoList != null) { // nullpointexception 이 나오지 않아야 한다. null이 아니어야함
 			for(TestVO vo : testvoList) {
 				JSONObject jsonObj = new JSONObject();     // {}            {}
 				jsonObj.put("no", vo.getNo());             // {"no":"101"}  {"no":"102"}

@@ -66,7 +66,7 @@ public class BoardDAO implements InterBoardDAO {
 	// view단의 form 태그에서 입력받은 값을 spring_test 테이블에 isnert 하기
 	@Override
 	public int test_insert(Map<String, String> paraMap) {
-		int n = sqlsession.insert("board.test_insert_map", paraMap);
+		int n = sqlsession.insert("board.test_insert_map", paraMap); // id값은 고유해야 한다.
 		return n;
 	}
 
@@ -74,7 +74,7 @@ public class BoardDAO implements InterBoardDAO {
 	@Override
 	public int test_insert(TestVO vo) {		
 		int n = sqlsession.insert("board.test_insert_vo", vo);		
-		return n;		
+		return n;
 	}
 	
 	////////////////////////////////////////////////////////////////////////////////////////////
