@@ -46,4 +46,34 @@
 		</if>
 		order by E.department_id, E.employee_id
 	</select>
+	
+	<resultMap type="HashMap" id="employeeCntByDeptname_Map">
+		<result property="department_name" 	column="department_name" 	javaType="String"/>
+		<result property="cnt" 				column="cnt" 				javaType="String"/>
+		<result property="percentage" 		column="percentage" 		javaType="String"/>
+	</resultMap>
+	
+	<select id="employeeCntByDeptname" resultMap="employeeCntByDeptname_Map">
+		select nvl(D.department_name, '부서없음') AS department_name
+		     , count(*) AS cnt
+		     , round( count(*)/(select count(*) from employees) * 100, 2) AS percentage
+		from employees E left join departments D 
+		on E.department_id = D.department_id
+		group by D.department_name
+		order by cnt desc, department_name asc
+	</select>
+	
+	<resultMap type="HashMap" id="employeeCntByGender_Map">
+      <result property="gender"       column="gender"    javaType="String" />
+      <result property="cnt"          column="cnt"       javaType="String" />
+      <result property="percentage"    column="percentage" javaType="String" />
+   </resultMap>
+   <select id="employeeCntByGender" resultMap="employeeCntByGender_Map">
+      select func_gender(jubun) AS gender 
+           , count(*) AS cnt 
+           , round(count(*)/(select count(*) from employees) * 100, 2) AS percentage 
+      from employees 
+      group by func_gender(jubun)
+      order by cnt desc
+   </select>
 </mapper>

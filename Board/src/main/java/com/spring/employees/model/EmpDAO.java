@@ -29,5 +29,21 @@ public class EmpDAO implements InterEmpDAO {
 		List<Map<String, String>> empList = sqlsession_2.selectList("hr.empList", paraMap);
 		return empList;
 	}
+
+
+	// employees 테이블에서 부서명별 인원수 및 퍼센티지 가져오기
+	@Override
+	public List<Map<String, String>> employeeCntByDeptname() {
+		List<Map<String, String>> deptnamePercentageList = sqlsession_2.selectList("hr.employeeCntByDeptname");
+		return deptnamePercentageList;
+	}
+
+
+	// employees 테이블에서 성별 인원수 및 퍼센티지 가져오기
+   @Override
+   public List<Map<String, String>> employeeCntByGender() {
+      List<Map<String, String>> genderPercentageList = sqlsession_2.selectList("hr.employeeCntByGender");  
+      return genderPercentageList;
+   }
 	
 }

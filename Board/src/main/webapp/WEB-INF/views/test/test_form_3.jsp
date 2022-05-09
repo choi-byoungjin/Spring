@@ -66,8 +66,15 @@
 		  url:"<%= ctxPath%>/test/ajax_select.action",
 		  dataType:"json",
 		  success:function(json){
-			/*
-			  [{"no":"501","name":"똘똘이","writeday":"2022-04-19 15:32:28"},{"no":"401","name":"엄정화","writeday":"2022-04-19 14:48:23"},{"no":"301","name":"이순신","writeday":"2022-04-19 14:37:54"},{"no":"202","name":"이정준","writeday":"2022-04-19 14:34:25"},{"no":"201","name":"김민정","writeday":"2022-04-19 14:33:35"},{"no":"101","name":"이재희","writeday":"2022-04-19 11:15:27"},{"no":"101","name":"서영학","writeday":"2022-04-19 10:37:23"},{"no":"101","name":"서영학","writeday":"2022-04-19 10:17:57"}] 
+			/* ajax get 웹페이지 결과물
+			  [{"no":"501","name":"똘똘이","writeday":"2022-04-19 15:32:28"},
+			   {"no":"401","name":"엄정화","writeday":"2022-04-19 14:48:23"},
+			   {"no":"301","name":"이순신","writeday":"2022-04-19 14:37:54"},
+			   {"no":"202","name":"이정준","writeday":"2022-04-19 14:34:25"},
+			   {"no":"201","name":"김민정","writeday":"2022-04-19 14:33:35"},
+			   {"no":"101","name":"이재희","writeday":"2022-04-19 11:15:27"},
+			   {"no":"101","name":"서영학","writeday":"2022-04-19 10:37:23"},
+			   {"no":"101","name":"서영학","writeday":"2022-04-19 10:17:57"}] 
 			*/
 			 
 			let html = "<table>" +
@@ -89,7 +96,7 @@
 			
 			html += "</table>";
 			
-			$("div#view").html(html);
+			$("div#view").html(html); // 최종결과물을 <div id="view"></div>에 뿌린다. 
 			  
 		  },
 		  error: function(request, status, error){

@@ -11,13 +11,18 @@ import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.xssf.streaming.SXSSFSheet;
 import org.apache.poi.xssf.streaming.SXSSFWorkbook;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.servlet.ModelAndView;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import com.spring.board.common.MyUtil;
 import com.spring.employees.service.InterEmpService;
 
@@ -300,6 +305,58 @@ public class EmpController {
 		//  /webapp/WEB-INF/spring/appServlet/servlet-context.xml 파일에서
 		//  뷰리졸버 0 순위로 기술된 bean 의 id 값이다.  
 	}
+	
+	
+	// === #177. 차트(그래프)를 보여주는 예제(view단) === //
+	@RequestMapping(value="/emp/chart.action")
+	public String empmanager_chart() {	
+		return "emp/chart.tiles2";
+	}
+	
+	// === #178. 차트그리기(Ajax) 부서명별 인원통계 및 퍼센티지 가져오기 === //
+	@ResponseBody
+	@RequestMapping(value="/chart/employeeCntByDeptname.action", produces="text/plain;charset=UTF-8")
+	public String employeeCntByDeptname() {
+		
+		List<Map<String, String>> deptnamePercentageList = service.employeeCntByDeptname();
+		
+		Gson gson = new Gson();
+		JsonArray jsonArr = new JsonArray();
+		
+		for(Map<String, String> map : deptnamePercentageList) {
+			JsonObject jsonObj = new JsonObject();
+			jsonObj.addProperty("department_name", map.get("department_name"));
+			jsonObj.addProperty("cnt", map.get("cnt"));
+			jsonObj.addProperty("percentage", map.get("percentage"));
+			
+			jsonArr.add(jsonObj);
+		}// end of for -------------------------------------------
+		
+		return new Gson().toJson(jsonArr);
+	}
+	
+	
+	// === #179. 차트그리기(Ajax) 성별 인원수 및 퍼센티지 가져오기 === //
+   @ResponseBody
+   @RequestMapping(value="/chart/employeeCntByGender.action", produces="text/plain;charset=UTF-8")
+   public String employeeCntByGender() {
+      
+      List<Map<String, String>> genderPercentageList = service.employeeCntByGender();
+      
+      JsonArray jsonArr = new JsonArray();
+      
+      for(Map<String, String> map : genderPercentageList) {
+         JsonObject jsonObj = new JsonObject();
+         jsonObj.addProperty("gender", map.get("gender"));
+         jsonObj.addProperty("cnt", map.get("cnt"));
+         jsonObj.addProperty("percentage", map.get("percentage"));
+         
+         jsonArr.add(jsonObj);
+      }// end of for----------------------------------------
+      
+      return new Gson().toJson(jsonArr);
+   }
+	
 	////////////////////////////////////////////////////////////////////////////////////
 		
 	// === 로그인 또는 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 생성 == //

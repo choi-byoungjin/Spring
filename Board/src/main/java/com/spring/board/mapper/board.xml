@@ -37,7 +37,7 @@
 			 HashMap은 패키지명을 쓰지 않아도 되지만 VO는 꼭 써야한다.-->
 	<insert id="test_insert_vo" parameterType="com.spring.board.model.TestVO">
 		insert into spring_test(no, name, writeday)
-		values(#{no},#{name} , default)
+		values(#{no}, #{name}, default)
 	</insert>
 	
 	

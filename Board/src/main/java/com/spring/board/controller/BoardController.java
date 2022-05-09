@@ -185,7 +185,7 @@ public class BoardController {
 			//  /test/test_select.action 페이지로 redirect(페이지이동)해라는 말이다.  
 			}
 			else {
-				return "redirect:/test/test_form.action";
+				return "redirect:/test/test_form_vo.action";
 			//  /test/test_form.action 페이지로 redirect(페이지이동)해라는 말이다.	
 			}
 		}
@@ -218,7 +218,7 @@ public class BoardController {
 		//  /test/test_select.action 페이지로 redirect(페이지이동)해라는 말이다.  
 		}
 		else {
-			return "redirect:/test/test_form.action";
+			return "redirect:/test/test_form_2.action";
 		//  /test/test_form.action 페이지로 redirect(페이지이동)해라는 말이다.	
 		}
 	}
@@ -276,20 +276,20 @@ public class BoardController {
 		
 		List<TestVO> testvoList = service.test_select();
 		
-		JSONArray jsonArr = new JSONArray(); // []
+		JSONArray jsonArr = new JSONArray(); // [] // insert 되어진게 없으면 공백
 		
 		if(testvoList != null) { // nullpointexception 이 나오지 않아야 한다. null이 아니어야함
 			for(TestVO vo : testvoList) {
-				JSONObject jsonObj = new JSONObject();     // {}            {}
-				jsonObj.put("no", vo.getNo());             // {"no":"101"}  {"no":"102"}
-				jsonObj.put("name", vo.getName());         // {"no":"101","name":"이순신"}  {"no":"102","name":"엄정화"}
-				jsonObj.put("writeday", vo.getWriteday()); // {"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}  {"no":"102","name":"엄정화","writeday":"2022-04-19 15:22:50"}
+				JSONObject jsonObj = new JSONObject();     // {}            {} ...
+				jsonObj.put("no", vo.getNo());             // {"no":"101"}  {"no":"102"} ...
+				jsonObj.put("name", vo.getName());         // {"no":"101","name":"이순신"}  {"no":"102","name":"엄정화"} ...
+				jsonObj.put("writeday", vo.getWriteday()); // {"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"}  {"no":"102","name":"엄정화","writeday":"2022-04-19 15:22:50"} ...
 				
-				jsonArr.put(jsonObj);                      // [{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"},{"no":"102","name":"엄정화","writeday":"2022-04-19 15:22:50"}]
+				jsonArr.put(jsonObj);                      // [{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"},{"no":"102","name":"엄정화","writeday":"2022-04-19 15:22:50"} ...] 
 			}// end of for-----------------------
 		}
 		
-		return jsonArr.toString(); // "[{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"},{"no":"102","name":"엄정화","writeday":"2022-04-19 15:22:50"}]"
+		return jsonArr.toString(); // "[{"no":"101","name":"이순신","writeday":"2022-04-19 15:20:30"},{"no":"102","name":"엄정화","writeday":"2022-04-19 15:22:50"}]" // 웹페이지에 그대로 보여준다.
 	}
 	
 	

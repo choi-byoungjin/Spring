@@ -30,4 +30,20 @@ public class EmpService implements InterEmpService {
 		return empList;
 	}
 	
+
+	// employees 테이블에서 부서명별 인원수 및 퍼센티지 가져오기
+	@Override
+	public List<Map<String, String>> employeeCntByDeptname() {
+		List<Map<String, String>> deptnamePercentageList = dao.employeeCntByDeptname();
+		return deptnamePercentageList;
+	}
+
+
+	// employees 테이블에서 성별 인원수 및 퍼센티지 가져오기
+   @Override
+   public List<Map<String, String>> employeeCntByGender() {
+      List<Map<String, String>> genderPercentageList = dao.employeeCntByGender(); 
+      return genderPercentageList;
+   }
+	
 }

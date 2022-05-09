@@ -808,3 +808,14 @@ where 1=1
 and nvl(E.department_id, -9999) in (-9999,30,70,100)
 and func_gender(E.jubun) = '남'
 order by E.department_id, E.employee_id;
+
+
+-- employees 테이블에서 부서명별 인원수 및 퍼센티지 가져오기 --
+
+select nvl(D.department_name, '부서없음') AS department_name
+     , count(*) AS cnt
+     , round( count(*)/(select count(*) from employees) * 100, 2) AS percentage
+from employees E left join departments D 
+on E.department_id = D.department_id
+group by D.department_name
+order by cnt desc, department_name asc;
