@@ -73,4 +73,17 @@ public interface InterBoardService {
 	// 댓글 1개 조회해주는 것
 	CommentVO getCommentOne(String seq);
 	
+	// === #183. Spring Scheduler(스프링 스케줄러3) === //
+	
+	// === Spring Scheduler 를 사용하여 특정 URL 사이트로 연결하기 ===
+	// !!<주의>!! 스프링스케줄러로 사용되는 메소드는 반드시 파라미터가 없어야 한다.
+	void branchTimeAlarm();
+	
+	// === Spring Scheduler 를 사용하여 email 발송하기 === 
+    // <주의> 스케줄러로 사용되어지는 메소드는 반드시 파라미터가 없어야 한다.!!!!
+    // 매일 새벽 4시 마다 고객이 예약한 2일전에 고객에게 예약이 있다는 e메일을 자동 발송 하도록 하는 예제를 만들어 본다. 
+    // 고객들의 email 주소는 List<String(e메일주소)> 으로 만들면 된다.
+    // 또는 e메일 자동 발송 대신에 휴대폰 문자를 자동 발송하는 것도 가능하다.     
+    void reservationEmailSending() throws Exception;
+	
 }

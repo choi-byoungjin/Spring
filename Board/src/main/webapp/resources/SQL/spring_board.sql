@@ -819,3 +819,102 @@ from employees E left join departments D
 on E.department_id = D.department_id
 group by D.department_name
 order by cnt desc, department_name asc;
+
+
+-- 특정부서명에 근무하는 직원들에 대해서 성별에 따른 인원수 및 퍼센티지 알아오기 --
+select func_gender(jubun) AS gender
+     , count(*) AS cnt
+     , round(count(*)/(select count(*) from employees) * 100, 2) AS percentage
+from employees E left join departments D
+on E.department_id = D.department_id
+where D.department_name = 'Shipping'
+group by func_gender(jubun)
+order by gender
+
+
+select func_gender(jubun) AS gender
+     , count(*) AS cnt
+     , round(count(*)/(select count(*) from employees) * 100, 2) AS percentage
+from employees E left join departments D
+on E.department_id = D.department_id
+where D.department_name is null
+group by func_gender(jubun)
+order by gender;
+
+
+------ ==== Spring Scheduler(스프링 스케줄러)를 사용한 email 자동 발송하기 ==== ------
+show user;
+-- USER이(가) "MYMVC_USER"입니다.
+
+desc tbl_member;
+
+create table tbl_reservation
+(reservationSeq    number        not null
+,fk_userid         varchar2(40)  not null
+,reservationDate   date          not null
+,mailSendCheck     number default 0 not null  -- 메일발송 했으면 1, 메일발송을 안했으면 0 으로 한다.
+,constraint PK_tbl_reservation primary key(reservationSeq)
+,constraint FK_tbl_reservation foreign key(fk_userid) references tbl_member(userid)
+,constraint CK_tbl_reservation check(mailSendCheck in(0,1))
+);
+
+
+create sequence seq_reservation
+start with 1
+increment by 1
+nomaxvalue
+nominvalue
+nocycle
+nocache;
+
+select *
+from tbl_member;
+
+select userid, email
+from tbl_member
+where userid in ('leess', 'choibj');
+
+update tbl_member set email = (select email from tbl_member where userid = 'choibj')
+where userid = 'leess';
+
+commit;
+
+select to_char(sysdate, 'yyyy-mm-dd') AS 오늘날짜
+from dual; -- 2022-05-10
+
+insert into tbl_reservation(reservationSeq, fk_userid, reservationDate)
+values(seq_reservation.nextval, 'choibj', to_date('2022-05-12 13:00','yyyy-mm-dd hh24:mi') );
+
+insert into tbl_reservation(reservationSeq, fk_userid, reservationDate)
+values(seq_reservation.nextval, 'leess', to_date('2022-05-12 14:00','yyyy-mm-dd hh24:mi') );
+
+insert into tbl_reservation(reservationSeq, fk_userid, reservationDate)
+values(seq_reservation.nextval, 'choibj', to_date('2022-05-13 11:00','yyyy-mm-dd hh24:mi') );
+
+insert into tbl_reservation(reservationSeq, fk_userid, reservationDate)
+values(seq_reservation.nextval, 'leess', to_date('2022-05-13 15:00','yyyy-mm-dd hh24:mi') );
+
+commit;
+
+select reservationSeq, fk_userid, 
+       to_char(reservationDate, 'yyyy-mm-dd hh24:mi:ss') as reservationDate, 
+       mailSendCheck
+from tbl_reservation
+order by reservationSeq desc;
+
+
+
+-- *** 오늘로 부터 2일(이틀) 뒤에 예약되어진 회원들을 조회하기 *** --
+select R.reservationSeq, M.userid, M.name, M.email, 
+       to_char(R.reservationDate,'yyyy-mm-dd hh24:mi') as reservationDate
+from tbl_member M join tbl_reservation R
+on M.userid = R.fk_userid
+where R.mailSendCheck = 0
+and to_char(reservationDate, 'yyyy-mm-dd') = to_char(sysdate+2, 'yyyy-mm-dd');
+
+/*
+  update tbl_reservation set mailSendCheck = 1
+  where reservationSeq IN ('1','2');
+*/
+
+desc tbl_board

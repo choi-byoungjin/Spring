@@ -40,10 +40,17 @@ public class EmpService implements InterEmpService {
 
 
 	// employees 테이블에서 성별 인원수 및 퍼센티지 가져오기
-   @Override
-   public List<Map<String, String>> employeeCntByGender() {
-      List<Map<String, String>> genderPercentageList = dao.employeeCntByGender(); 
-      return genderPercentageList;
-   }
+    @Override
+    public List<Map<String, String>> employeeCntByGender() {
+       List<Map<String, String>> genderPercentageList = dao.employeeCntByGender(); 
+       return genderPercentageList;
+    }
+
+    // 특정 부서명에 근무하는 직원들의 성별 인원수 및 퍼센티지 가져오기 
+    @Override
+    public List<Map<String, String>> genderCntSpecialDeptname(Map<String, String> paraMap) { 
+       List<Map<String, String>> genderPercentageList = dao.genderCntSpecialDeptname(paraMap); 
+       return genderPercentageList;
+    }
 	
 }

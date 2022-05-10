@@ -257,5 +257,20 @@ public class BoardDAO implements InterBoardDAO {
 		CommentVO commentvo = sqlsession.selectOne("board.getCommentOne", seq);
 		return commentvo;
 	}
+
+	// === #189. Spring Scheduler(스프링 스케줄러9) === //
+	// === Spring Scheduler(스프링 스케줄러)를 사용한 email 발송하기 === //
+	@Override
+	public List<Map<String, String>> getReservationList() {
+		List<Map<String, String>> reservationList = sqlsession.selectList("board.getReservationList");
+		return reservationList;
+	}
+
+	
+	// e메일을 발송한 행은 발송했다는 표시해주기
+	@Override
+	public void updateMailSendCheck(Map<String, String[]> paraMap) {	
+		sqlsession.update("board.updateMailSendCheck", paraMap);
+	}
 		
 }

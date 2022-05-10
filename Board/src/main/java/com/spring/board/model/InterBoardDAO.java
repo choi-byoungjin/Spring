@@ -80,4 +80,9 @@ public interface InterBoardDAO {
 
 	// 댓글 1개 조회해주는 것
 	CommentVO getCommentOne(String seq);
+
+	// === Spring Scheduler(스프링 스케줄러)를 사용한 email 발송하기 === //
+	List<Map<String, String>> getReservationList();
+	void updateMailSendCheck(Map<String, String[]> paraMap); // e메일을 발송한 행은 발송했다는 표시해주기
+	
 }

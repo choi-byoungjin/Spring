@@ -114,6 +114,9 @@
 		    	dataType:"JSON",
                 success:function(json){
                 	
+                	$("div#table_container").empty();
+        			$("div.highcharts-data-table").empty();
+                	
                     let resultArr = [];
                     
                     for(let i=0; i<json.length; i++) {
@@ -203,12 +206,15 @@
 			break;
 			
 			
-		case "gender": //성별 인원통계 를 선택한 경우  
+		case "gender": // 성별 인원통계 를 선택한 경우  
 			
 		$.ajax({
 		    	url:"<%= request.getContextPath()%>/chart/employeeCntByGender.action", 
 		    	dataType:"JSON",
                 success:function(json){
+                	
+                	$("div#table_container").empty();
+        			$("div.highcharts-data-table").empty();
                 	
                     let resultArr = [];
                     
@@ -299,16 +305,19 @@
 			break;
 			
 		
-		case "deptnameGender": //부서별 성별 인원통계 를 선택한 경우  
+		case "deptnameGender": // 부서별 성별 인원통계 를 선택한 경우  
 		
 			$.ajax({
 		    	url:"<%= request.getContextPath()%>/chart/employeeCntByDeptname.action", 
 		    	dataType:"JSON",
-                success:function(json){
+                success:function(json_1) {
+                	
+                	$("div#table_container").empty();
+        			$("div.highcharts-data-table").empty();
                 	
                 	let deptnameArr = []; // 부서명별 인원수 퍼센티지 객체배열
                 	
-                	$.each(json, function(index, item){
+                	$.each(json_1, function(index, item){
                 		deptnameArr.push({name: item.department_name,
 					                      y: Number(item.percentage),
 					                      drilldown: item.department_name
@@ -316,6 +325,36 @@
                 	});// end of $.each(json, function(index, item){})------------------ 
                 	
                 	let genderArr = [];   // 특정 부서명에 근무하는 직원들의 성별 인원수 퍼센티지 객체 배열 
+                	
+                	$.each(json_1, function(index_1, item_1){
+                		
+                		$.ajax({
+                			url:"<%= request.getContextPath()%>/chart/genderCntSpecialDeptname.action",
+                			type:"GET",
+                			data:{"deptname":item_1.department_name},
+                			dataType:"JSON",
+                			success:function(json_2) {
+                			   
+                				let subArr = [];
+                				
+                				$.each(json_2, function(index_2, item_2){
+                					
+                					subArr.push([item_2.gender,
+				                                 Number(item_2.percentage)]);
+                					
+                				});// end of $.each(json_2, function(index_2, item_2){})-----------
+                				
+                				genderArr.push({name:item_1.department_name,
+                					            id:item_1.department_name,
+                					            data:subArr});
+                				
+                			},
+                			error: function(request, status, error){
+            					alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);
+            				}
+                		});
+                		
+                	});// end of $.each(json, function(index, item){})------------------
                 	
                     
                  ////////////////////////////////////////////////////////////
@@ -370,7 +409,6 @@
 					            name: "Browsers",
 					            colorByPoint: true,
 					            data: deptnameArr  // **** 위에서 구한 값을 대입시킴. 부서명별 인원수 퍼센티지 객체 배열 ****// 
-					            
 					          /*  
 					            data: [
 					                {
@@ -643,8 +681,7 @@
 					    }
 					});   	
                  ////////////////////////////////////////////////////////////
-                 
-	                 
+                     
                 },
                 error: function(request, status, error){
 					alert("code: "+request.status+"\n"+"message: "+request.responseText+"\n"+"error: "+error);

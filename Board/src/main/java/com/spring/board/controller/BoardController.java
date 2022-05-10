@@ -1166,7 +1166,7 @@ public class BoardController {
 		int n = service.edit(boardvo);
 		// n 이 1 이라면 정상적으로 변경됨.
 		// n 이 0이라면 글수정에 필요한 글암호가 틀린경우임.
-		
+		System.out.println(n);
 		if(n==0) {
 			mav.addObject("message", "암호가 일치하지 않아  글 수정이 불가합니다.");
 			mav.addObject("loc", "javascript:history.back()");
@@ -1825,6 +1825,24 @@ public class BoardController {
 		}
 
 	}
+	
+	// === #182. Spring Scheduler(스프링 스케줄러2)를 사용하여 특정 URL 사이트로 연결하기 === //
+	@RequestMapping(value="/branchTimeAlarm.action")
+	public ModelAndView branchTimeAlarm(ModelAndView mav, HttpServletRequest request) {
+		
+		String message = "12시 50분!! 즐거운 점심시간 입니다.";
+		String loc = request.getContextPath()+"/index.action";
+		
+		mav.addObject("message", message);
+		mav.addObject("loc", loc);
+		
+		mav.setViewName("msg");
+		
+		return mav;
+	}
+	
+	
+	
 	////////////////////////////////////////////////////////////////////////////////////
 	
 	// === 로그인 또는 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 생성 == //

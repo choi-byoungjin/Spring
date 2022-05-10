@@ -67,13 +67,31 @@
       <result property="gender"       column="gender"    javaType="String" />
       <result property="cnt"          column="cnt"       javaType="String" />
       <result property="percentage"    column="percentage" javaType="String" />
-   </resultMap>
-   <select id="employeeCntByGender" resultMap="employeeCntByGender_Map">
-      select func_gender(jubun) AS gender 
+	</resultMap>
+	
+	<select id="employeeCntByGender" resultMap="employeeCntByGender_Map">
+	   select func_gender(jubun) AS gender 
+	        , count(*) AS cnt 
+	        , round(count(*)/(select count(*) from employees) * 100, 2) AS percentage 
+	   from employees 
+	   group by func_gender(jubun)
+	   order by cnt desc
+	</select>
+	
+	<select id="genderCntSpecialDeptname" parameterType="HashMap" resultMap="employeeCntByGender_Map">
+      select func_gender(jubun) AS gender
            , count(*) AS cnt 
-           , round(count(*)/(select count(*) from employees) * 100, 2) AS percentage 
-      from employees 
+           , round(count(*)/(select count(*) from employees)*100, 2) AS percentage  
+      from employees E left join departments D
+      on E.department_id = D.department_id
+      <if test="deptname != '부서없음'">
+      where D.department_name = #{deptname}
+      </if>
+      <if test="deptname == '부서없음'">
+      where D.department_name is null
+      </if>
       group by func_gender(jubun)
-      order by cnt desc
+      order by gender
    </select>
+   
 </mapper>

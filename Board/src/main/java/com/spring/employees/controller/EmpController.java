@@ -320,7 +320,6 @@ public class EmpController {
 		
 		List<Map<String, String>> deptnamePercentageList = service.employeeCntByDeptname();
 		
-		Gson gson = new Gson();
 		JsonArray jsonArr = new JsonArray();
 		
 		for(Map<String, String> map : deptnamePercentageList) {
@@ -337,26 +336,53 @@ public class EmpController {
 	
 	
 	// === #179. 차트그리기(Ajax) 성별 인원수 및 퍼센티지 가져오기 === //
-   @ResponseBody
-   @RequestMapping(value="/chart/employeeCntByGender.action", produces="text/plain;charset=UTF-8")
-   public String employeeCntByGender() {
+    @ResponseBody
+    @RequestMapping(value="/chart/employeeCntByGender.action", produces="text/plain;charset=UTF-8")
+    public String employeeCntByGender() {
       
-      List<Map<String, String>> genderPercentageList = service.employeeCntByGender();
+       List<Map<String, String>> genderPercentageList = service.employeeCntByGender();
       
-      JsonArray jsonArr = new JsonArray();
+       JsonArray jsonArr = new JsonArray();
       
-      for(Map<String, String> map : genderPercentageList) {
-         JsonObject jsonObj = new JsonObject();
-         jsonObj.addProperty("gender", map.get("gender"));
-         jsonObj.addProperty("cnt", map.get("cnt"));
-         jsonObj.addProperty("percentage", map.get("percentage"));
+       for(Map<String, String> map : genderPercentageList) {
+          JsonObject jsonObj = new JsonObject();
+          jsonObj.addProperty("gender", map.get("gender"));
+          jsonObj.addProperty("cnt", map.get("cnt"));
+          jsonObj.addProperty("percentage", map.get("percentage"));
          
          jsonArr.add(jsonObj);
-      }// end of for----------------------------------------
+       }// end of for----------------------------------------
       
-      return new Gson().toJson(jsonArr);
-   }
+       return new Gson().toJson(jsonArr);
+    }
 	
+ // === #180. 차트그리기(Ajax) 특정 부서명에 근무하는 직원들의 성별 인원수 및 퍼센티지 가져오기 === //
+    @ResponseBody
+    @RequestMapping(value="/chart/genderCntSpecialDeptname.action", produces="text/plain;charset=UTF-8") 
+     public String genderCntSpecialDeptname(HttpServletRequest request) {
+       
+       String deptname = request.getParameter("deptname");
+       Map<String, String> paraMap = new HashMap<>();
+       paraMap.put("deptname", deptname);
+       
+       List<Map<String, String>> genderPercentageList = service.genderCntSpecialDeptname(paraMap);
+       
+       JsonArray jsonArr = new JsonArray();
+       
+       for(Map<String, String> map : genderPercentageList) {
+          JsonObject jsonObj = new JsonObject();
+          jsonObj.addProperty("gender", map.get("gender"));
+          jsonObj.addProperty("cnt", map.get("cnt"));
+          jsonObj.addProperty("percentage", map.get("percentage"));
+          
+          jsonArr.add(jsonObj);
+       }// end of for----------------------------------------
+       
+       return new Gson().toJson(jsonArr);
+    }
+    
+   
+   
 	////////////////////////////////////////////////////////////////////////////////////
 		
 	// === 로그인 또는 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 생성 == //
