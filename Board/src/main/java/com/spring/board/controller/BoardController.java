@@ -28,6 +28,7 @@ import com.spring.board.common.MyUtil;
 import com.spring.board.common.Sha256;
 import com.spring.board.model.*;
 import com.spring.board.service.*;
+import com.sun.xml.internal.ws.resources.HttpserverMessages;
 
 /*
 	사용자 웹브라우저 요청(View)  ==> DispatcherServlet ==> @Controller 클래스 <==>> Service단(핵심업무로직단, business logic단) <==>> Model단[Repository](DAO, DTO) <==>> myBatis <==>> DB(오라클)           
@@ -1839,6 +1840,16 @@ public class BoardController {
 		mav.setViewName("msg");
 		
 		return mav;
+	}
+	
+	
+	// === #194. (웹채팅관련4) ===
+	@RequestMapping(value="/chatting/multichat.action", method= {RequestMethod.GET})
+	public String requiredLogin_multichat(HttpServletRequest request, HttpServletResponse response) {
+		
+		
+		
+		return "chatting/multichat.tiles1";
 	}
 	
 	
