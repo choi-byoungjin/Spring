@@ -8,7 +8,7 @@ public class MessageVO {
 
 	private String message;
 	private String type; // type의 글자가 all 이면 전체에게 채팅메시지를 보냄
-	private String to;	 // 특정 클라이언트 IP Address
+	private String to;	 // 특정 웹소켓 id
 	
 	public String getMessage() {
 		return message;
