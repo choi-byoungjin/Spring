@@ -75,9 +75,9 @@
 			                                               // 현재시각의 분이 59분이라면 weatherTimejugi에 (1+30)분을 넣어준다.
 		}
 	
-	 <%--	
+	 	
 		startshowWeather(); // 기상청 날씨정보 공공API XML데이터 호출 및 매 1시간 마다 주기적으로 기상청 날씨정보 공공API XML데이터 호출하기
-	 --%>	
+	 
 	}); // end of $(document).ready(); ---------------------------------
 
 	function showNowTime() {
@@ -152,12 +152,12 @@
 				
 				var weather = $(rootElement).find("weather");
 				var updateTime = $(weather).attr("year")+"년 "+$(weather).attr("month")+"월 "+$(weather).attr("day")+"일 "+$(weather).attr("hour")+"시";    
-			//  console.log(updateTime); 
-				// 2020년 12월 18일 09시 
-				
+			//	console.log(updateTime); 
+			//	2022년 05월 12일 11시
+
 				var localArr = $(rootElement).find("local");
 			//	console.log("지역개수 : " + localArr.length);
-				// 지역개수 : 95
+			//	지역개수 : 96
 				
 				var html = "날씨정보 발표시각 : <span style='font-weight:bold;'>"+updateTime+"</span>&nbsp;";
 			        html += "<span style='color:blue; cursor:pointer; font-size:9pt;' onClick='javascript:showWeather();'>업데이트</span><br/><br/>";
@@ -192,10 +192,10 @@
 					html += "</tr>";
 					
 					// ====== XML 을 JSON 으로 변경하기  ====== //
-					   var jsonObj = {"locationName":$(local).text(),
-							          "ta":$(local).attr("ta")};
+					var jsonObj = {"locationName":$(local).text(),
+									"ta":$(local).attr("ta")};
 					   
-					   jsonObjArr.push(jsonObj);
+					jsonObjArr.push(jsonObj);
 					//////////////////////////////////////////////////
 					
 				}// end of for----------------------------
