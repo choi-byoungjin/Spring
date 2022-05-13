@@ -17,8 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import com.spring.board.common.MyUtil;
 import com.spring.board.model.MemberVO;
-import com.spring.schedule.model.Calendar_schedule_VO;
-import com.spring.schedule.model.Calendar_small_category_VO;
+import com.spring.schedule.model.*;
 import com.spring.schedule.service.InterScheduleService;
 
 @Controller

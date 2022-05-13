@@ -169,7 +169,7 @@
 				    html += "</tr>";
 				    
 				// ====== XML 을 JSON 으로 변경하기  ====== //
-				   var jsonObjArr = [];
+				var jsonObjArr = [];
 				/////////////////////////////////////////
 				
 				for(var i=0; i<localArr.length; i++) { 
