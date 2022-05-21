@@ -37,7 +37,7 @@ public class EmpController {
 	
 	// === #175. 다중 체크박스를 사용시 sql문에서 in 절을 처리하는 예제 === //
 	@RequestMapping(value="/emp/empList.action")
-	public String requiredLogin_employeeInfoView(HttpServletRequest request, HttpServletResponse response) {
+	public String empmanager_employeeInfoView(HttpServletRequest request, HttpServletResponse response) {
 		
 	//	getCurrentURL(request); // 로그인 또는 로그아웃을 했을 때 현재 보이던 그 페이지로 그대로 돌아가기 위한 메소드 호출
 		

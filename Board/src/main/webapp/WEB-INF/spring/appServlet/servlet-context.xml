@@ -182,4 +182,37 @@
 	  <aop:pointcut id="controllerOperation" expression="execution(public * com.spring..*Controller.*(..))" />
     </aop:config>
 	
+	
+	<!-- ======================== 인터셉터 시작  ======================== -->
+    <!-- 로그인 여부 체크하는 인터셉터 등록 -->
+	<beans:bean id="loginCheckInterceptor" class="com.spring.interceptor.controller.LoginCheckInterceptor" />
+	<beans:bean id="adminLoginCheckInterceptor" class="com.spring.interceptor.controller.AdminLoginCheckInterceptor" />
+	
+	<mvc:interceptors>
+	      <!-- 특정 URL에 대해서만 로그인 여부 체크하는 인터셉터 매핑시키기 -->
+	      <!-- <mvc:interceptor> -->
+	         <!-- <mvc:mapping path="/member_only/member_a.action"/> 포함되는 url -->
+	         <!-- <mvc:mapping path="/member_only/member_b.action"/> 포함되는 url -->
+	         <!-- <beans:ref bean="loginCheckInterceptor"/>          회원 사용자인지 검사 -->
+	      <!-- </mvc:interceptor> -->
+	
+	      <!-- <mvc:interceptor> -->
+	         <!-- <mvc:mapping path="/special_member/special_member_a.action"/> 포함되는 url -->
+	         <!-- <mvc:mapping path="/special_member/special_member_b.action"/> 포함되는 url --> 
+	         <!-- <beans:ref bean="adminLoginCheckInterceptor"/>                특정 회원 사용자인지 검사 -->
+	      <!-- </mvc:interceptor> -->
+	     
+	      
+	      <!-- 모든 URL에 대해서 로그인 여부 체크하는 인터셉터 매핑시키기 -->
+		 <mvc:interceptor>
+		    <mvc:mapping path="/**"/>                    <!-- 모든 url -->
+		    <mvc:exclude-mapping path="/index.action"/>     <!-- 제외하는 url -->
+		    <mvc:exclude-mapping path="/login.action"/>     <!-- 제외하는 url -->
+		    <mvc:exclude-mapping path="/loginEnd.action"/>  <!-- 제외하는 url -->
+		    <mvc:exclude-mapping path="/anyone/**"/>        <!-- 제외하는 url 누구나접근_A,B-->
+		    <beans:ref bean="loginCheckInterceptor"/>       <!-- 회원 사용자인지 검사 -->
+		 </mvc:interceptor> 
+	     
+	</mvc:interceptors>
+	<!-- ======================== 인터셉터 끝  ======================== -->
 </beans:beans>

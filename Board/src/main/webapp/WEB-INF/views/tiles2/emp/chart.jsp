@@ -210,7 +210,7 @@
 			
 		$.ajax({
 		    	url:"<%= request.getContextPath()%>/chart/employeeCntByGender.action", 
-		    	dataType:"JSON",
+		    	dataType:"JSON", // 수강신청에서 활용
                 success:function(json){
                 	
                 	$("div#table_container").empty();

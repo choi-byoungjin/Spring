@@ -1853,6 +1853,44 @@ public class BoardController {
 	}
 	
 	
+	///////////////////// === 인터셉터 연습 시작 === ///////////////////////////////////////////////
+	@RequestMapping(value="/anyone/anyone_a.action")
+	public String anyone_a() {
+	
+		return "interceptor_test/anyone/anyone_a.tiles1";
+	}
+	
+	@RequestMapping(value="/anyone/anyone_b.action")
+	public String anyone_b() {
+	
+		return "interceptor_test/anyone/anyone_b.tiles1";
+	}
+	
+	@RequestMapping(value="/member_only/member_a.action")
+	public String member_a() {
+	
+		return "interceptor_test/member/member_a.tiles1";
+	}
+	
+	@RequestMapping(value="/member_only/member_b.action")
+	public String member_b() {
+	
+		return "interceptor_test/member/member_b.tiles1";
+	}
+	
+	@RequestMapping(value="/special_member/special_member_a.action")
+	public String special_member_a() {
+	
+		return "interceptor_test/special_member/special_member_a.tiles1";
+	}
+	
+	@RequestMapping(value="/special_member/special_member_b.action")
+	public String special_member_b() {
+	
+		return "interceptor_test/special_member/special_member_b.tiles1";
+	}
+	///////////////////// === 인터셉터 연습 끝 === ///////////////////////////////////////////////
+	
 	
 	////////////////////////////////////////////////////////////////////////////////////
 	

@@ -32,7 +32,7 @@ public class ScheduleController {
 	public ModelAndView requiredLogin_showSchedule(HttpServletRequest request, HttpServletResponse response, ModelAndView mav) { 
 		
 		mav.setViewName("schedule/scheduleManagement.tiles1");
-
+		
 		return mav;
 	}
 	
@@ -189,8 +189,7 @@ public class ScheduleController {
 			}
 		}
 		
-		return jsonArr.toString();
-		
+		return jsonArr.toString();		
 	}
 	
 	

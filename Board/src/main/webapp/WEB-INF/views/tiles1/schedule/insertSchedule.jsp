@@ -156,7 +156,7 @@
 		// 공유자 추가하기
 		$("input#joinUserName").bind("keyup",function(){
 				var joinUserName = $(this).val();
-			//	console.log("확인용 joinUserName : " + joinUserName);
+				console.log("확인용 joinUserName : " + joinUserName);
 				$.ajax({
 					url:"<%= ctxPath%>/schedule/insertSchedule/searchJoinUserList.action",
 					data:{"joinUserName":joinUserName},
@@ -164,7 +164,7 @@
 					success : function(json){
 						var joinUserArr = [];
 				
-				//		console.log("이:"+json.length);
+						console.log("이:"+json.length);
 						if(json.length > 0){
 							
 							$.each(json, function(index,item){

@@ -106,6 +106,19 @@
               </div>
           </li>
           
+          <!-- ==== 인터셉터 알아보기 ====  -->
+          <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-info" href="#" id="navbarDropdown" data-toggle="dropdown">인터셉터알아보기</a>  
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                 <a class="dropdown-item" href="<%=ctxPath%>/anyone/anyone_a.action">누구나접근_A</a>
+                 <a class="dropdown-item" href="<%=ctxPath%>/anyone/anyone_b.action">누구나접근_B</a>
+                 <a class="dropdown-item" href="<%=ctxPath%>/member_only/member_a.action">회원누구나접근_A</a>
+                 <a class="dropdown-item" href="<%=ctxPath%>/member_only/member_b.action">회원누구나접근_B</a>
+                 <a class="dropdown-item" href="<%=ctxPath%>/special_member/special_member_a.action">특정회원만접근_A</a>
+                 <a class="dropdown-item" href="<%=ctxPath%>/special_member/special_member_b.action">특정회원만접근_B</a>
+              </div>
+          </li>
+          
         </ul>
       </div>
       
