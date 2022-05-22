@@ -87,7 +87,7 @@ public class EmpController {
 		//	/WEB-INF/views/tiles2/emp/empList.jsp 파일을 생성한다.
 	}
 	
-	// ==== #176. Excel 파일로 다운받기 예제 ==== //
+	// ==== #176. Excel 파일로 다운받기 예제 ==== // // 시간표다운로드에 참고
 	// /excel/downloadExcelFile.action
 	@RequestMapping(value="/excel/downloadExcelFile.action", method= {RequestMethod.POST}) 
 	public String downloadExcelFile(HttpServletRequest request, Model model) { // 모델은 오로지 저장소 역할만 한다.
